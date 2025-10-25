@@ -3,17 +3,9 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-#define starting_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
-typedef unsigned long long U64;
+#include "BitBoard.h"
 
-// Create bit board for every piece type and color.
-enum {
-    P, N, B, R, Q, K,   // white
-    p, n, b, r, q, k    // black
-};
-
-// Global Variables/ BitBoards
+// Bitboards
 
 U64 bitboards[12];
 U64 whitePieces;     
@@ -29,8 +21,15 @@ unsigned char castle;
 int halfmove;
 int fullmove;
 
-// Initialize the bit boards to 0s
-void InitializeBitBoards(){
+// Initialize  bitboards to 0s
+void ResetBoardState(){
+
+    // Reset game state variables
+    side = -1;
+    enpassant = -1;
+    castle = 0; // set default to no castle rights (if it is a '-')
+    halfmove = 0;
+    fullmove = 0;
     
     // Initialize bitboards for each chess piece
     for(int i = 0; i < 12; i++){
@@ -80,8 +79,8 @@ void SetPiece(int piece, int square) {
     empty = ~occupied;
 }
 
-// Remove piece from square (essential for castling, captures and pawn promotion)
-void RemovePiece(int piece, int square) {\
+// Remove piece from square
+void RemovePiece(int piece, int square) {
     // remove piece from square
     bitboards[piece] &= ~(1ULL << square);   
 
@@ -113,6 +112,24 @@ void PrintBitboard(U64 board) {
     printf("\n");
 }
 
+void PrintGameState(){
+    // Display Current Side
+    side == 0 ? printf("Current Turn: White \n\n") : printf("Current Turn: Black \n\n");
+
+    // Display Enpassant Index
+    enpassant == -1 ? printf("No valid enpassant \n") : printf("En passant at index: %d \n", enpassant);
+
+    // Display castle status
+    if(castle == 0) printf("No castle");
+    printf("Castling rights: ");
+    if(castle & 1)  printf("K");  // White kingside
+    if(castle & 2)  printf("Q");  // White queenside
+    if(castle & 4)  printf("k");  // Black kingside
+    if(castle & 8)  printf("q");  // Black queenside
+    printf("\n");
+
+}
+
 // Parse FEN String to capture the current game state
 void ParseFEN(char * FEN){
 
@@ -134,11 +151,10 @@ void ParseFEN(char * FEN){
         exit(EXIT_FAILURE);
     }
 
+    // Reset bitboards and game states
+    ResetBoardState();
+
     // Initialize Board Layout
-
-    // Reset bitboards
-    InitializeBitBoards();
-
     int rank = 7;
     int file = 0;
 
@@ -176,7 +192,6 @@ void ParseFEN(char * FEN){
     side = (fields[1][0] == 'w') ? 0 : 1;
 
     // Castling rights
-    castle = 0; // set default to no castle rights (if it is a '-')
     for (int j = 0; j < strlen(fields[2]); j++) {
         // bitmask to determine current castling rights
         switch(fields[2][j]) {
@@ -209,8 +224,10 @@ int main(){
     ParseFEN(starting_position);
     printf("Starting Position of Chessboard: \n");
     PrintBitboard(occupied);
+    PrintGameState();
     ParseFEN(tricky_position);
     printf("Tricky Position: \n");
     PrintBitboard(occupied);
+    PrintGameState();
     return 0;
 }
