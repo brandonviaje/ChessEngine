@@ -21,9 +21,13 @@ U64 blackPieces;
 U64 occupied;        
 U64 empty;          
 
-int side;
+// Game states
+
+int side; // 0 = white, 1 = black
 int enpassant;
-int castle;
+unsigned char castle;
+int halfmove;
+int fullmove;
 
 // Initialize the bit boards to 0s
 void InitializeBitBoards(){
@@ -76,7 +80,7 @@ void SetPiece(int piece, int square) {
     empty = ~occupied;
 }
 
-// Remove piece from square
+// Remove piece from square (essential for castling, captures and pawn promotion)
 void RemovePiece(int piece, int square) {\
     // remove piece from square
     bitboards[piece] &= ~(1ULL << square);   
@@ -109,30 +113,44 @@ void PrintBitboard(U64 board) {
     printf("\n");
 }
 
-// Parse FEN String
+// Parse FEN String to capture the current game state
 void ParseFEN(char * FEN){
-    // Reset the bitboards to update
+
+    // Parse FEN into 6 fields
+    char *fields[6];
+    int i = 0;
+    char *fen_copy = strdup(FEN);
+    char *token = strtok(fen_copy, " ");
+
+    while(token != NULL && i < 6){
+        fields[i++] = token;
+        token = strtok(NULL, " ");
+    }
+
+    // Catch invalid FEN notation
+    if(i < 6){
+        fprintf(stderr, "%s", "Error: Invalid FEN (missing fields)\n");
+        free(fen_copy);
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize Board Layout
+
+    // Reset bitboards
     InitializeBitBoards();
 
-    char delimiter = '/';
     int rank = 7;
     int file = 0;
-    int len = strlen(FEN);
 
-    // When you parse a FEN notation 
-    for(int i = 0; i < len; i++){
-
-        // doesn't account for any enpassant, castling check etc.
-        if(FEN[i] == ' ') break;
-
+    for(int i = 0; i < strlen(fields[0]); i++){
         // Check if you reach a delimiter
-        if(FEN[i] == delimiter){
+        if(FEN[i] == '/'){
             rank--;
             file = 0;
             continue;
         }
         
-        // If you get a number less than 8 skip that many squares
+        // If you get an int n skip n squares 
         if(isdigit(FEN[i])){
             file += FEN[i] -'0';
             continue;
@@ -153,7 +171,38 @@ void ParseFEN(char * FEN){
         // Update file
         file++;
     }
-    //printf("Successfully PARSED FEN String! \n\n");
+
+    // Current side
+    side = (fields[1][0] == 'w') ? 0 : 1;
+
+    // Castling rights
+    castle = 0; // set default to no castle rights (if it is a '-')
+    for (int j = 0; j < strlen(fields[2]); j++) {
+        // bitmask to determine current castling rights
+        switch(fields[2][j]) {
+            case 'K': castle |= 1 << 0; break; // White kingside
+            case 'Q': castle |= 1 << 1; break; // White queenside
+            case 'k': castle |= 1 << 2; break; // Black kingside
+            case 'q': castle |= 1 << 3; break; // Black queenside
+        }
+    }
+
+    // En passant 
+    if (fields[3][0] == '-') enpassant = -1;
+    else {
+        int file_ep = fields[3][0] - 'a';
+        int rank_ep = fields[3][1] - '1';
+        enpassant = rank_ep * 8 + file_ep;
+    }
+
+    // Halfmove clock
+    halfmove = atoi(fields[4]);
+
+    // Fullmove number 
+    fullmove = atoi(fields[5]);
+
+    // release fen copy
+    free(fen_copy);
 }
 
 int main(){
