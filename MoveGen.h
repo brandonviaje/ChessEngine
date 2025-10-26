@@ -14,10 +14,10 @@ extern int moveCount;
 
 // Function protocol
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int side);
+void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces);
+void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces);
+void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces);
+void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces);
+void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces);
 
 #endif
