@@ -11,7 +11,6 @@ U64 bitboards[12];
 U64 whitePieces;     
 U64 blackPieces;     
 U64 occupied;        
-U64 empty;          
 
 // Game states
 
@@ -40,7 +39,6 @@ void ResetBoardState(){
     whitePieces = 0uLL;
     blackPieces = 0uLL;
     occupied = 0uLL;
-    empty = 0uLL;
 }
 
 int CharToPiece(char c){
@@ -76,7 +74,6 @@ void SetPiece(int piece, int square) {
 
     // update occupied and empty bitboard
     occupied |= 1ULL << square;
-    empty = ~occupied;
 }
 
 // Remove piece from square
@@ -94,7 +91,6 @@ void RemovePiece(int piece, int square) {
 
     // update occupied and empty bitboard
     occupied &= ~(1ULL << square);
-    empty = ~occupied;
 }
 
 void PrintBitboard(U64 board) {

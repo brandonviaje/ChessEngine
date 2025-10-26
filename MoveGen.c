@@ -6,10 +6,19 @@ Move moveList[256];
 int moveCount = 0;
 
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
+    U64 empty = ~(ownPieces | enemyPieces);
 
     // Generate all single & double push moves for corresponding sides
-    U64 singlePush = side == 0 ? (pawns & rank2) << 8 & empty : (pawns & rank7) >> 8 & empty;
-    U64 doublePush = side == 0 ? (singlePush << 8) & empty & rank4 : (singlePush >> 8) & empty & rank5;
+    U64 singlePush = side == 0 ? (pawns << 8) & empty : (pawns >> 8) & empty;
+    U64 doublePush = 0;
+    
+    if(side == 0) {
+        U64 firstPushWhite = (pawns & rank2) << 8 & empty; 
+        doublePush = (firstPushWhite << 8) & empty;        
+    } else {
+        U64 firstPushBlack = (pawns & rank7) >> 8 & empty;
+        doublePush = (firstPushBlack >> 8) & empty;
+    }
 
     while(singlePush){
         int to = __builtin_ctzll(singlePush);

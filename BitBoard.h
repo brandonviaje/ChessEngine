@@ -9,7 +9,6 @@ extern U64 bitboards[12];
 extern U64 whitePieces;
 extern U64 blackPieces;
 extern U64 occupied;
-extern U64 empty;
 
 // Game state
 extern int side;          // 0 = white, 1 = black
