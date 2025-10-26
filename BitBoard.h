@@ -1,13 +1,8 @@
 #ifndef BITBOARD_H
 #define BITBOARD_H
+#include "Masks.h"
 #define starting_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1"
-
-typedef unsigned long long U64;
-typedef enum {
-    P, N, B, R, Q, K,   // white
-    p, n, b, r, q, k    // black
-} Pieces;
 
 // Piece bitboards
 extern U64 bitboards[12];

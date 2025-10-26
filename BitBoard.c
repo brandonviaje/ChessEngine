@@ -110,6 +110,9 @@ void PrintBitboard(U64 board) {
         printf("\n");
     }
     printf("\n");
+
+    // Print game state
+    PrintGameState();
 }
 
 void PrintGameState(){
@@ -127,7 +130,6 @@ void PrintGameState(){
     if(castle & 4)  printf("k");  // Black kingside
     if(castle & 8)  printf("q");  // Black queenside
     printf("\n");
-
 }
 
 // Parse FEN String to capture the current game state
@@ -224,10 +226,8 @@ int main(){
     ParseFEN(starting_position);
     printf("Starting Position of Chessboard: \n");
     PrintBitboard(occupied);
-    PrintGameState();
     ParseFEN(tricky_position);
     printf("Tricky Position: \n");
     PrintBitboard(occupied);
-    PrintGameState();
     return 0;
 }
