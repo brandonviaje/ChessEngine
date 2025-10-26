@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "MoveGen.h"
 
+// Global variables
 Move moveList[256]; 
 int moveCount = 0;
 
@@ -86,22 +87,89 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces){
     }
 }
 
-void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces){
+void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces) {
+    U64 rooksCopy = rooks;
 
+    while (rooksCopy) {
+        // get rook position
+        int from = __builtin_ctzll(rooksCopy);    
+        rooksCopy &= rooksCopy - 1;             
+        int directions[4] = {8, -8, 1, -1};         // up, down, right, left
+
+        for (int d = 0; d < 4; d++) {
+
+            int i = from;
+
+            while (1) {
+                // move one square in direction
+                i += directions[d];
+
+                // horizontal wrapping
+                if ((directions[d] == 1 || directions[d] == -1) && (i / 8 != from / 8)) break;
+
+                // vertical edges
+                if (i < 0 || i > 63) break;
+
+                // add move to move list
+                moveList[moveCount++] = (Move){from, i, 0};
+
+                // stop sliding if blocked
+                if ((ownPieces | enemyPieces) & (1ULL << i)) break;
+            }
+        }
+    }
 }
 
-void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces){
+void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
+    U64 bishopsCopy = bishops;
 
+    while (bishopsCopy) {
+        // Get bishop position
+        int from = __builtin_ctzll(bishopsCopy);
+        bishopsCopy &= bishopsCopy - 1;
+
+        int directions[4] = {-7, 7, -9, 9}; // diagonals
+
+        for (int d = 0; d < 4; d++) {
+            
+            int i = from;
+
+            while (1) {
+
+                // Check file edge for diagonal wrapping
+                int prevFile = i % 8;
+                i += directions[d];
+                int currFile = i % 8;
+
+                if (i < 0 || i > 63 || abs(currFile - prevFile) != 1) break;   // vertical edges or horizontal wrap
+                moveList[moveCount++] = (Move){from, i, 0};                    // Add move to move list
+                if ((ownPieces | enemyPieces) & (1ULL << i)) break;            // Stop sliding if blocked
+            }
+        }
+    }
 }
 
 void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces){
-
+    // Queen moves is the union of rook and bishop generated moves
+    GenerateRookMoves(queen, ownPieces, enemyPieces);
+    GenerateBishopMoves(queen, ownPieces, enemyPieces);
 }
 
 void ResetMoveList(){
     // Reset move list array and move count
     memset(moveList, 0, sizeof(moveList));
     moveCount = 0;
+}
+
+void GenerateAllMoves(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side) {
+    // Reset move list, generate all pseudo moves for each piece type
+    ResetMoveList();
+    GeneratePawnMoves(P, ownPieces, enemyPieces, side);
+    GenerateKnightMoves(N, ownPieces, enemyPieces);
+    GenerateBishopMoves(B, ownPieces, enemyPieces);
+    GenerateRookMoves(R, ownPieces, enemyPieces);
+    GenerateQueenMoves(Q, ownPieces, enemyPieces);
+    GenerateKingMoves(K, ownPieces, enemyPieces);
 }
 
 int main(){
