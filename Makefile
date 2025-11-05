@@ -19,6 +19,10 @@ all: $(TARGET)
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET)
 
+# Run the program
+run: $(TARGET)
+	./$(TARGET)
+
 # Clean build files
 clean:
 	rm -f $(TARGET) *.o
