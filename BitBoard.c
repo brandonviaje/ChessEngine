@@ -222,13 +222,3 @@ void ParseFEN(char * FEN){
     // release fen copy
     free(fen_copy);
 }
-
-// int main(){
-//     ParseFEN(starting_position);
-//     printf("Starting Position of Chessboard: \n");
-//     PrintBitboard(occupied);
-//     ParseFEN(tricky_position);
-//     printf("Tricky Position: \n");
-//     PrintBitboard(occupied);
-//     return 0;
-// }
