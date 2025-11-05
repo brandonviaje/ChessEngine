@@ -23,6 +23,10 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
     // Generate all single & double push moves for corresponding sides
     U64 singlePush = side == 0 ? (pawns << 8) & empty : (pawns >> 8) & empty;
     U64 doublePush = 0;
+
+    // Generate capture moves: left and right capture for corresponding sides
+    U64 leftCapture = side == 0 ? (pawns << 7) & enemyPieces : (pawns >> 7) & enemyPieces;
+    U64 rightCapture = side == 0 ? (pawns << 9) & enemyPieces : (pawns >> 9) & enemyPieces;
     
     if(side == 0) {
         U64 firstPushWhite = (pawns & RANK_2) << 8 & empty; 
@@ -45,6 +49,20 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
         moveList[moveCount++] = (Move){from,to,0}; // add to move list
         doublePush &= doublePush - 1; // remove LSB
     }
+
+    while(leftCapture){
+        int to = __builtin_ctzll(leftCapture);
+        int from = side == 0 ? to - 7 : to + 9;
+        moveList[moveCount++] = (Move){from,to,0};
+        leftCapture &= leftCapture - 1; // remove LSB
+    }
+
+    while(rightCapture){
+        int to = __builtin_ctzll(rightCapture);
+        int from = side == 0 ? to - 9 : to + 7;
+        moveList[moveCount++] = (Move){from,to,0};
+        rightCapture &= rightCapture - 1; // remove LSB (done processing this piece)
+    }
 }
 
 void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
@@ -63,10 +81,12 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
 
         // Define knight move offsets and edge masks
         const int offsets[8] = {17, 15, 10, 6, -17, -15, -10, -6};
+
         const U64 unsafeFiles[8] = {
             FILE_H, FILE_A, FILE_G | FILE_H, FILE_A | FILE_B,
             FILE_A, FILE_H, FILE_A | FILE_B, FILE_G | FILE_H
         };
+
         const U64 unsafeRanks[8] = {
             RANK_7 | RANK_8, RANK_7 | RANK_8, RANK_8, RANK_8,
             RANK_1 | RANK_2, RANK_1 | RANK_2, RANK_1, RANK_1
@@ -75,7 +95,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
         for (int i = 0; i < 8; i++) {
             int to = from + offsets[i];
 
-            // Skip if knight is on an unsafe file/rank
+            // Skip move if knight is on an unsafe file/rank
             if ((1ULL << from & unsafeFiles[i]) || (1ULL << from & unsafeRanks[i]))
                 continue;
 
@@ -84,6 +104,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
                 continue;
 
             possibleMoves |= 1ULL << to & empty;
+            possibleMoves |= 1ULL << to & enemyPieces;
         }
 
         while(possibleMoves){
@@ -127,6 +148,7 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces){
                 continue;
 
             possibleMoves |= 1ULL << to & empty;
+            possibleMoves |= 1ULL << to & enemyPieces;
         }
 
         while (possibleMoves){
@@ -180,34 +202,33 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
     U64 bishopsCopy = bishops;
 
     while (bishopsCopy) {
-        // Get bishop position
         int from = __builtin_ctzll(bishopsCopy);
         bishopsCopy &= bishopsCopy - 1;
 
         int directions[4] = {-7, 7, -9, 9}; // diagonals
 
         for (int d = 0; d < 4; d++) {
-            
             int i = from;
 
             while (1) {
+                int prev = i;
+                i += directions[d];  
+                // stop if off board or file wrapped
+                if (i < 0 || i > 63) break;
 
-                // Check file edge for diagonal wrapping
-                int prevFile = i % 8;
-                i += directions[d];
+                int prevFile = prev % 8;
                 int currFile = i % 8;
 
-                // vertical edges or horizontal wrap
-                if (i < 0 || i > 63 || abs(currFile - prevFile) != 1) break;   
+                if (abs(currFile - prevFile) != 1) break;
 
-                // if bishop blocked by own piece, stop sliding
-                if(ownPieces & 1ULL << i) break;
+                // stop if blocked by friendly piece
+                if (ownPieces & (1ULL << i)) break;
 
-                // Add move to move list
-                moveList[moveCount++] = (Move){from, i, 0};                   
+                // add move
+                moveList[moveCount++] = (Move){from, i, 0};
 
-                // Stop sliding after capturing
-                if (enemyPieces & (1ULL << i)) break;            
+                // stop sliding after capture
+                if (enemyPieces & (1ULL << i)) break;
             }
         }
     }
@@ -225,8 +246,7 @@ void ResetMoveList(){
     moveCount = 0;
 }
 
-void GenerateAllMoves(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side) {
-    // Reset move list, generate all pseudo moves for each piece type
+void GeneratePseudoLegalMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side) {
     ResetMoveList();
     GeneratePawnMoves(P, ownPieces, enemyPieces, side);
     GenerateKnightMoves(N, ownPieces, enemyPieces);
@@ -234,6 +254,14 @@ void GenerateAllMoves(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U
     GenerateRookMoves(R, ownPieces, enemyPieces);
     GenerateQueenMoves(Q, ownPieces, enemyPieces);
     GenerateKingMoves(K, ownPieces, enemyPieces);
+}
+
+void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side) {
+    if (side == 0) {  // white
+        GeneratePseudoLegalMovesInternal(bitboards[P], bitboards[N], bitboards[B], bitboards[R], bitboards[Q], bitboards[K],ownPieces, enemyPieces, side);
+    } else {  // black
+        GeneratePseudoLegalMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k],ownPieces, enemyPieces, side);
+    }
 }
 
 void PrintMoveList(){
@@ -253,14 +281,7 @@ void PrintMoveList(){
 int main(){
     ParseFEN(starting_position); 
     PrintBitboard(occupied);
-    GenerateAllMoves(bitboards[P],bitboards[N],bitboards[B],bitboards[R],bitboards[Q],bitboards[K],whitePieces,blackPieces,side);
-    printMoveList();
+    GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == 0 ? blackPieces : whitePieces, side);
+    PrintMoveList();
     return 0;
 }
-
-/**
- * 
- * - Capture Moves
- * - Special Moves
- * 
- */

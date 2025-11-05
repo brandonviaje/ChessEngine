@@ -15,6 +15,8 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces);
 void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces);
 void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces);
 void ResetMoveList();
-void GenerateAllMoves(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side);
+void GeneratePseudoLegalMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side);
+void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side);
+void PrintMoveList();
 
 #endif
