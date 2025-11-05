@@ -1,11 +1,6 @@
 #ifndef MASKS_H
 #define MASKS_H
-
-typedef unsigned long long U64;
-typedef enum {
-    P, N, B, R, Q, K,   // white
-    p, n, b, r, q, k    // black
-} Pieces;
+#include "MyTypes.h"
 
 // Rank masks
 static const U64 RANK_1 = 0x00000000000000FFULL;

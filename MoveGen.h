@@ -1,13 +1,8 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
 #include "Masks.h"
+#include "MyTypes.h"
 #include "BitBoard.h"
-
-typedef struct {
-    int from;    // square index the piece moves from
-    int to;      // square index the piece moves to
-    int flags;   // bitmask for promotions, en passant, castling, etc.
-} Move;
 
 extern Move moveList[256];
 extern int moveCount;

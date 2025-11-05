@@ -1,14 +1,7 @@
 #ifndef BITBOARD_H
 #define BITBOARD_H
-#include "Masks.h"
+#include "MyTypes.h"
 #include "MoveGen.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <ctype.h>
-#define starting_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1"
 
 // Piece bitboards
 extern U64 bitboards[12];

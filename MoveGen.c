@@ -3,10 +3,19 @@
 // Global variables
 Move moveList[256]; 
 int moveCount = 0;
+
+//BitBoards
 extern U64 bitboards[12];
 extern U64 blackPieces;
 extern U64 whitePieces;
 extern U64 occupied;
+
+// Game State
+extern int side;
+extern int enpassant;  
+extern unsigned char castle; 
+extern int halfmove;      
+extern int fullmove;      
 
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
     U64 empty = ~(ownPieces | enemyPieces);
@@ -194,7 +203,8 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
                 // if bishop blocked by own piece, stop sliding
                 if(ownPieces & 1ULL << i) break;
 
-                moveList[moveCount++] = (Move){from, i, 0};                    // Add move to move list
+                // Add move to move list
+                moveList[moveCount++] = (Move){from, i, 0};                   
 
                 // Stop sliding after capturing
                 if (enemyPieces & (1ULL << i)) break;            
@@ -226,7 +236,7 @@ void GenerateAllMoves(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U
     GenerateKingMoves(K, ownPieces, enemyPieces);
 }
 
-void printMoveList(){
+void PrintMoveList(){
     printf("Move List Count: %d\n", moveCount);
     for(int i = 0; i < moveCount; i++){
         int from = moveList[i].from;
@@ -243,7 +253,14 @@ void printMoveList(){
 int main(){
     ParseFEN(starting_position); 
     PrintBitboard(occupied);
-    GenerateAllMoves(bitboards[P],bitboards[N],bitboards[B],bitboards[R],bitboards[Q],bitboards[K],whitePieces,blackPieces,0);
+    GenerateAllMoves(bitboards[P],bitboards[N],bitboards[B],bitboards[R],bitboards[Q],bitboards[K],whitePieces,blackPieces,side);
     printMoveList();
     return 0;
 }
+
+/**
+ * 
+ * - Capture Moves
+ * - Special Moves
+ * 
+ */
