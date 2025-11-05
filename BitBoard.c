@@ -95,7 +95,10 @@ void RemovePiece(int piece, int square) {
 
 void PrintBitboard(U64 board) {
     printf("\n");
-    for (int rank = 7; rank >= 0; rank--) {  
+
+    // Print ranks from 8 to 1
+    for (int rank = 7; rank >= 0; rank--) {
+        printf("%d  ", rank + 1); // Rank label on the left
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
             if (board & (1ULL << square))
@@ -105,10 +108,12 @@ void PrintBitboard(U64 board) {
         }
         printf("\n");
     }
-    printf("\n");
 
-    // Print game state
-    PrintGameState();
+    // Print file labels at the bottom
+    printf("\n   ");
+    for (int file = 0; file < 8; file++)
+        printf("%c ", 'a' + file);
+    printf("\n\n");
 }
 
 void PrintGameState(){
@@ -218,12 +223,12 @@ void ParseFEN(char * FEN){
     free(fen_copy);
 }
 
-int main(){
-    ParseFEN(starting_position);
-    printf("Starting Position of Chessboard: \n");
-    PrintBitboard(occupied);
-    ParseFEN(tricky_position);
-    printf("Tricky Position: \n");
-    PrintBitboard(occupied);
-    return 0;
-}
+// int main(){
+//     ParseFEN(starting_position);
+//     printf("Starting Position of Chessboard: \n");
+//     PrintBitboard(occupied);
+//     ParseFEN(tricky_position);
+//     printf("Tricky Position: \n");
+//     PrintBitboard(occupied);
+//     return 0;
+// }

@@ -1,7 +1,9 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
-#include "BitBoard.h"
 #include "Masks.h"
+#include "BitBoard.h"
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     int from;    // square index the piece moves from

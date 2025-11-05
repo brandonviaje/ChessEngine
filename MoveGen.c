@@ -4,6 +4,10 @@
 // Global variables
 Move moveList[256]; 
 int moveCount = 0;
+extern U64 bitboards[12];
+extern U64 blackPieces;
+extern U64 whitePieces;
+extern U64 occupied;
 
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
     U64 empty = ~(ownPieces | enemyPieces);
@@ -13,10 +17,10 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
     U64 doublePush = 0;
     
     if(side == 0) {
-        U64 firstPushWhite = (pawns & rank2) << 8 & empty; 
+        U64 firstPushWhite = (pawns & RANK_2) << 8 & empty; 
         doublePush = (firstPushWhite << 8) & empty;        
     } else {
-        U64 firstPushBlack = (pawns & rank7) >> 8 & empty;
+        U64 firstPushBlack = (pawns & RANK_7) >> 8 & empty;
         doublePush = (firstPushBlack >> 8) & empty;
     }
 
@@ -39,6 +43,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
     
     // Make a copy so we don’t destroy the original bitboard
     U64 knightsCopy = knights; 
+    U64 empty = ~(ownPieces | enemyPieces);
 
     while(knightsCopy){
 
@@ -47,14 +52,31 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
 
         // All possible moves
         U64 possibleMoves = 0;
-        possibleMoves |= 1ULL << (from + 17); // up 2, right 1
-        possibleMoves |= 1ULL << (from + 15); // up 2, left 1
-        possibleMoves |= 1ULL << (from + 10); // up 1, right 2
-        possibleMoves |= 1ULL << (from + 6);  // up 1, left 2
-        possibleMoves |= 1ULL << (from - 17); // down 2, left 1
-        possibleMoves |= 1ULL << (from - 15); // down 2, right 1
-        possibleMoves |= 1ULL << (from - 10); // down 1, left 2
-        possibleMoves |= 1ULL << (from - 6);  // down 1, right 2
+
+        // Define knight move offsets and edge masks
+        const int offsets[8] = {17, 15, 10, 6, -17, -15, -10, -6};
+        const U64 unsafeFiles[8] = {
+            FILE_H, FILE_A, FILE_G | FILE_H, FILE_A | FILE_B,
+            FILE_A, FILE_H, FILE_A | FILE_B, FILE_G | FILE_H
+        };
+        const U64 unsafeRanks[8] = {
+            RANK_7 | RANK_8, RANK_7 | RANK_8, RANK_8, RANK_8,
+            RANK_1 | RANK_2, RANK_1 | RANK_2, RANK_1, RANK_1
+        };
+        
+        for (int i = 0; i < 8; i++) {
+            int to = from + offsets[i];
+
+            // Skip if knight is on an unsafe file/rank
+            if ((1ULL << from & unsafeFiles[i]) || (1ULL << from & unsafeRanks[i]))
+                continue;
+
+            // Skip if move goes off the board
+            if (to < 0 || to > 63)
+                continue;
+
+            possibleMoves |= 1ULL << to & empty;
+        }
 
         while(possibleMoves){
             int to = __builtin_ctzll(possibleMoves); // destination square
@@ -69,21 +91,35 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
 void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces){
     // Make a copy so we don’t destroy the original bitboard
     U64 kingsCopy = king;
+    U64 empty = ~(ownPieces | enemyPieces);
 
     while(kingsCopy){
         // Get the king's position
         int from = __builtin_ctzll(kingsCopy);
         U64 possibleMoves = 0;
 
-        // Generate all kings possible moves
-        possibleMoves |= 1uLL << (from + 9);
-        possibleMoves |= 1uLL << (from + 8);
-        possibleMoves |= 1uLL << (from + 7);
-        possibleMoves |= 1uLL << (from + 1);
-        possibleMoves |= 1uLL << (from - 9);
-        possibleMoves |= 1uLL << (from - 8);
-        possibleMoves |= 1uLL << (from - 7);
-        possibleMoves |= 1uLL << (from - 1);
+        // King move offsets and edge masking
+        const int offsets[8] = {9, 8, 7, 1, -1, -7, -8, -9};
+        const U64 unsafeFiles[8] = {
+            FILE_H, 0, FILE_A, FILE_H, FILE_A, FILE_H, 0, FILE_A
+        };
+        const U64 unsafeRanks[8] = {
+            RANK_8, RANK_8, RANK_8, 0, 0, RANK_1, RANK_1, RANK_1
+        };
+
+        for (int i = 0; i < 8; i++) {
+            int to = from + offsets[i];
+
+            // Skip if king is on an unsafe file/rank
+            if ((1ULL << from & unsafeFiles[i]) || (1ULL << from & unsafeRanks[i]))
+                continue;
+
+            // Skip if move goes off the board
+            if (to < 0 || to > 63)
+                continue;
+
+            possibleMoves |= 1ULL << to & empty;
+        }
 
         while (possibleMoves){
             // Get the LSB's possible move
@@ -119,11 +155,14 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces) {
                 // vertical edges
                 if (i < 0 || i > 63) break;
 
+                // if rook is blocked by own piece, stop sliding
+                if (ownPieces & (1ULL << i)) break;  
+
                 // add move to move list
                 moveList[moveCount++] = (Move){from, i, 0};
 
-                // stop sliding if blocked
-                if ((ownPieces | enemyPieces) & (1ULL << i)) break;
+                // stop sliding after capturing
+                if (enemyPieces & (1ULL << i)) break;
             }
         }
     }
@@ -150,9 +189,16 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
                 i += directions[d];
                 int currFile = i % 8;
 
-                if (i < 0 || i > 63 || abs(currFile - prevFile) != 1) break;   // vertical edges or horizontal wrap
+                // vertical edges or horizontal wrap
+                if (i < 0 || i > 63 || abs(currFile - prevFile) != 1) break;   
+
+                // if bishop blocked by own piece, stop sliding
+                if(ownPieces & 1ULL << i) break;
+
                 moveList[moveCount++] = (Move){from, i, 0};                    // Add move to move list
-                if ((ownPieces | enemyPieces) & (1ULL << i)) break;            // Stop sliding if blocked
+
+                // Stop sliding after capturing
+                if (enemyPieces & (1ULL << i)) break;            
             }
         }
     }
@@ -181,6 +227,24 @@ void GenerateAllMoves(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U
     GenerateKingMoves(K, ownPieces, enemyPieces);
 }
 
+void printMoveList(){
+    printf("Move List Count: %d\n", moveCount);
+    for(int i = 0; i < moveCount; i++){
+        int from = moveList[i].from;
+        int to   = moveList[i].to;
+        char file_from = 'a' + (from % 8);
+        char rank_from = '1' + (from / 8);
+        char file_to   = 'a' + (to % 8);
+        char rank_to   = '1' + (to / 8);
+
+        printf("Move %d: %c%c -> %c%c\n", i+1, file_from, rank_from, file_to, rank_to);
+    }
+}
+
 int main(){
+    ParseFEN(tricky_position); 
+    PrintBitboard(whitePieces);
+    GenerateAllMoves(bitboards[P],bitboards[N],bitboards[B],bitboards[R],bitboards[Q],bitboards[K],whitePieces,blackPieces,0);
+    printMoveList();
     return 0;
 }
