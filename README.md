@@ -43,12 +43,15 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 
 
-<!-- CONTACT -->
+<!-- CONTACT 
+
 ## Contact
 
 Brandon - [LinkedIn](https://www.linkedin.com/in/brandon-viaje/) 
 
 Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/brandonviaje/ChessEngine)
+-->
+
 
 
 <!-- ACKNOWLEDGMENTS -->
