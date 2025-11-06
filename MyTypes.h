@@ -16,6 +16,7 @@
 #define rook_attack_position "8/8/8/3pP3/3R4/3N1B2/8/8 w - - 0 1"
 #define queen_attack_position "8/8/3p4/2nP4/3Q4/3N1B2/8/8 w - - 0 1"
 #define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1"
+#define make_move "rnbqkbnr/p1pppppp/8/1p6/2P5/8/8/8 w KQkq - 0 1"
 
 // Misc. Def
 #define MAX_MOVES 256
@@ -33,6 +34,7 @@ typedef struct {
     int from;    // square index the piece moves from
     int to;      // square index the piece moves to
     int flags;   // bitmask for promotions, en passant, castling, etc.
+    int captured;
 } Move;
 
 #endif

@@ -14,9 +14,12 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece);
-void ResetMoveList();
 void GeneratePseudoLegalMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side);
 void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side);
+void ResetMoveList();
+int DetectCapture(int to);
+void MakeMove(int index);
+void UndoMove(int index);
 void PrintMoveList();
 
 #endif
