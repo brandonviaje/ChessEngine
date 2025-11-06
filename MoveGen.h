@@ -8,12 +8,12 @@ extern Move moveList[256];
 extern int moveCount;
 
 // Function prototypes
-void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces);
-void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces);
-void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces);
-void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces);
-void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces);
+void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side,int piece);
+void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece);
+void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece);
+void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces, int piece);
+void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece);
+void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece);
 void ResetMoveList();
 void GeneratePseudoLegalMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side);
 void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side);

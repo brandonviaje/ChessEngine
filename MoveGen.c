@@ -15,9 +15,9 @@ extern int side;
 extern int enpassant;  
 extern unsigned char castle; 
 extern int halfmove;      
-extern int fullmove;      
+extern int fullmove;  
 
-void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
+void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece){
     U64 empty = ~(ownPieces | enemyPieces);
 
     // Generate all single & double push moves for corresponding sides
@@ -39,33 +39,33 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side){
     while(singlePush){
         int to = __builtin_ctzll(singlePush);
         int from = side == 0 ? to - 8 : to + 8;
-        moveList[moveCount++] = (Move){from,to,0}; // add to move list
+        moveList[moveCount++] = (Move){piece, from, to, 0};// add to move list
         singlePush &= singlePush - 1; // remove LSB
     }
 
     while(doublePush){
         int to = __builtin_ctzll(doublePush);
         int from = side == 0 ? to - 16 : to + 16;
-        moveList[moveCount++] = (Move){from,to,0}; // add to move list
+        moveList[moveCount++] = (Move){piece, from, to, 0}; // add to move list
         doublePush &= doublePush - 1; // remove LSB
     }
 
     while(leftCapture){
         int to = __builtin_ctzll(leftCapture);
         int from = side == 0 ? to - 7 : to + 9;
-        moveList[moveCount++] = (Move){from,to,0};
+        moveList[moveCount++] = (Move){piece, from, to, 0};
         leftCapture &= leftCapture - 1; // remove LSB
     }
 
     while(rightCapture){
         int to = __builtin_ctzll(rightCapture);
         int from = side == 0 ? to - 9 : to + 7;
-        moveList[moveCount++] = (Move){from,to,0};
+        moveList[moveCount++] = (Move){piece, from, to, 0};
         rightCapture &= rightCapture - 1; // remove LSB (done processing this piece)
     }
 }
 
-void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
+void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece){
     
     // Make a copy so we don’t destroy the original bitboard
     U64 knightsCopy = knights; 
@@ -109,7 +109,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
 
         while(possibleMoves){
             int to = __builtin_ctzll(possibleMoves); // destination square
-            moveList[moveCount++] = (Move){from, to, 0};
+            moveList[moveCount++] = (Move){piece, from, to, 0};
             possibleMoves &= possibleMoves - 1; // remove this destination bit
         }
 
@@ -117,7 +117,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces){
     }
 }
 
-void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces){
+void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
     // Make a copy so we don’t destroy the original bitboard
     U64 kingsCopy = king;
     U64 empty = ~(ownPieces | enemyPieces);
@@ -154,15 +154,16 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces){
         while (possibleMoves){
             // Get the LSB's possible move
             int to = __builtin_ctzll(possibleMoves); 
-            moveList[moveCount++] = (Move){from, to, 0};
+            moveList[moveCount++] = (Move){piece, from, to, 0}; 
             possibleMoves &= possibleMoves - 1; // remove least significant bit
         }
+        
         // remove LSB of kings copy
         kingsCopy &= kingsCopy - 1;
     }
 }
 
-void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces) {
+void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces,int piece) {
     U64 rooksCopy = rooks;
 
     while (rooksCopy) {
@@ -189,7 +190,7 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces) {
                 if (ownPieces & (1ULL << i)) break;  
 
                 // add move to move list
-                moveList[moveCount++] = (Move){from, i, 0};
+                moveList[moveCount++] = (Move){piece, from, i, 0};
 
                 // stop sliding after capturing
                 if (enemyPieces & (1ULL << i)) break;
@@ -198,7 +199,7 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces) {
     }
 }
 
-void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
+void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece) {
     U64 bishopsCopy = bishops;
 
     while (bishopsCopy) {
@@ -225,7 +226,7 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
                 if (ownPieces & (1ULL << i)) break;
 
                 // add move
-                moveList[moveCount++] = (Move){from, i, 0};
+                moveList[moveCount++] = (Move){piece, from, i, 0};
 
                 // stop sliding after capture
                 if (enemyPieces & (1ULL << i)) break;
@@ -234,10 +235,10 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces) {
     }
 }
 
-void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces){
+void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece){
     // Queen moves is the union of rook and bishop generated moves
-    GenerateRookMoves(queen, ownPieces, enemyPieces);
-    GenerateBishopMoves(queen, ownPieces, enemyPieces);
+    GenerateRookMoves(queen, ownPieces, enemyPieces, piece);
+    GenerateBishopMoves(queen, ownPieces, enemyPieces, piece);
 }
 
 void ResetMoveList(){
@@ -246,14 +247,14 @@ void ResetMoveList(){
     moveCount = 0;
 }
 
-void GeneratePseudoLegalMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side) {
+void GeneratePseudoLegalMovesInternal(U64 Pawn, U64 Knight, U64 Bishop, U64 Rook, U64 Queen, U64 King, U64 ownPieces, U64 enemyPieces, int side) {
     ResetMoveList();
-    GeneratePawnMoves(P, ownPieces, enemyPieces, side);
-    GenerateKnightMoves(N, ownPieces, enemyPieces);
-    GenerateBishopMoves(B, ownPieces, enemyPieces);
-    GenerateRookMoves(R, ownPieces, enemyPieces);
-    GenerateQueenMoves(Q, ownPieces, enemyPieces);
-    GenerateKingMoves(K, ownPieces, enemyPieces);
+    GeneratePawnMoves(Pawn, ownPieces, enemyPieces, side, side == 0 ? P : p);
+    GenerateKnightMoves(Knight, ownPieces, enemyPieces, side == 0 ? N : n);
+    GenerateBishopMoves(Bishop, ownPieces, enemyPieces, side == 0 ? B : b);
+    GenerateRookMoves(Rook, ownPieces, enemyPieces, side == 0 ? R : r);
+    GenerateQueenMoves(Queen, ownPieces, enemyPieces, side == 0 ? Q : q);
+    GenerateKingMoves(King, ownPieces, enemyPieces, side == 0 ? K : k);
 }
 
 void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side) {
@@ -262,6 +263,87 @@ void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side) {
     } else {  // black
         GeneratePseudoLegalMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k],ownPieces, enemyPieces, side);
     }
+}
+
+// Make Move Function
+void MakeMove(int index){
+
+    if (index < 0 || index > MAX_MOVES || index > moveCount){
+        fprintf(stderr, "%s", "Error: Invalid Move Index\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int piece = moveList[index].piece;
+    int from = moveList[index].from;
+    int to = moveList[index].to;
+
+    if (from < 0 || from >= 64 || to < 0 || to >= 64) {
+        fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", from, to);
+        exit(EXIT_FAILURE);
+    }
+
+    int fromMask = 1ULL << from;
+    int toMask = 1ULL << to;
+
+    // remove piece using fromMask
+    bitboards[piece] ^= fromMask;
+    // add piece using toMask
+    bitboards[piece] ^= toMask;
+
+    // Update the corresponding color bitboard
+    if (piece <= K){
+        whitePieces ^= fromMask;
+        whitePieces ^= toMask;
+    }else{
+        blackPieces ^= fromMask;
+        blackPieces ^= toMask;
+    }
+
+    // Update occupied bitboard
+    occupied ^= fromMask;
+    occupied ^= toMask;
+}
+
+// Make Undo Move function
+void UndoMove(int index){
+
+    if (index < 0 || index > MAX_MOVES || index > moveCount){
+        fprintf(stderr, "%s", "Error: Invalid Move Index\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int piece = moveList[index].piece;
+    // Previous was our from 
+    int prev = moveList[index].from;
+    // Current square piece is on
+    int current = moveList[index].to;
+
+    if (prev < 0 || prev >= 64 || current < 0 || current >= 64) {
+        fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", prev, current);
+        exit(EXIT_FAILURE);
+    }
+
+    // Create prevMask and currentMask
+    int prevMask = 1ULL << prev;
+    int currentMask = 1ULL << current;
+
+    // remove piece using currentMask
+    bitboards[piece] ^= currentMask;
+    // undo move using prevMask
+    bitboards[piece] ^= prevMask;
+
+    // Update the corresponding color bitboard
+    if (piece <= K){
+        whitePieces ^= currentMask;
+        whitePieces ^= prevMask;
+    }else{
+        blackPieces ^= currentMask;
+        blackPieces ^= prevMask;
+    }
+
+    // Update occupied bitboard
+    occupied ^= currentMask;
+    occupied ^= prevMask;
 }
 
 void PrintMoveList(){
@@ -283,5 +365,20 @@ int main(){
     PrintBitboard(occupied);
     GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == 0 ? blackPieces : whitePieces, side);
     PrintMoveList();
+    printf("\nMaking Move 20: g1 -> h3 \n");
+    MakeMove(19);
+    PrintBitboard(occupied);
+    UndoMove(19);
+    printf("Undoing Move 20: h3 -> g1 \n");
+    PrintBitboard(occupied);
     return 0;
 }
+
+/*
+ * 
+ * Make Move Does not account for capture moves, en passant, castling, etc.
+ * Undo Move Does not account for capture moves, en passant, castling, etc.
+ * Need to build legal moves by checking if king is in check
+ * Implement isInCheck() function later.
+ * 
+ */
