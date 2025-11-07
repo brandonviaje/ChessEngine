@@ -281,7 +281,7 @@ int DetectCapture(int to) {
 // Make Move Function
 void MakeMove(int index){
 
-    if (index < 0 || index > MAX_MOVES || index > moveCount){
+    if (index < 0 || index >= MAX_MOVES || index > moveCount){
         fprintf(stderr, "%s", "Error: Invalid Move Index\n");
         exit(EXIT_FAILURE);
     }
@@ -289,15 +289,16 @@ void MakeMove(int index){
     int piece = moveList[index].piece;
     int from = moveList[index].from;
     int to = moveList[index].to;
+    int captured = moveList[index].captured;
 
     if (from < 0 || from >= 64 || to < 0 || to >= 64) {
         fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", from, to);
         exit(EXIT_FAILURE);
     }
 
-    int fromMask = 1ULL << from;
-    int toMask = 1ULL << to;
-    
+    U64 fromMask = 1ULL << from;
+    U64 toMask = 1ULL << to;
+
     bitboards[piece] ^= fromMask; // remove piece using fromMask
     bitboards[piece] ^= toMask;  // add piece using toMask
 
@@ -310,24 +311,35 @@ void MakeMove(int index){
         blackPieces ^= toMask;
     }
 
-    // Update occupied bitboard
+    // Check if the move made is a capture
+    if(captured != -1){
+        // remove captured piece from its bitboard
+        bitboards[captured] ^= toMask;
+
+        // Update corresponding captured pieces bitboard
+        if (captured <= K){
+            whitePieces ^= toMask;
+        }else{
+            blackPieces ^= toMask;
+        }
+    }
+
+    // Update occupied bitboard, from square gets cleared
     occupied ^= fromMask;
-    occupied ^= toMask;
 }
 
 // Make Undo Move function
 void UndoMove(int index){
 
-    if (index < 0 || index > MAX_MOVES || index > moveCount){
+    if (index < 0 || index >= MAX_MOVES || index > moveCount){
         fprintf(stderr, "%s", "Error: Invalid Move Index\n");
         exit(EXIT_FAILURE);
     }
 
     int piece = moveList[index].piece;
-    // Previous was our from 
     int prev = moveList[index].from;
-    // Current square piece is on
     int current = moveList[index].to;
+    int captured = moveList[index].captured;
 
     if (prev < 0 || prev >= 64 || current < 0 || current >= 64) {
         fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", prev, current);
@@ -335,8 +347,8 @@ void UndoMove(int index){
     }
 
     // Create prevMask and currentMask
-    int prevMask = 1ULL << prev;
-    int currentMask = 1ULL << current;
+    U64 prevMask = 1ULL << prev;
+    U64 currentMask = 1ULL << current;
 
     // remove piece using currentMask
     bitboards[piece] ^= currentMask;
@@ -352,8 +364,17 @@ void UndoMove(int index){
         blackPieces ^= prevMask;
     }
 
+    if(captured != -1){
+        // Undo the move, capture goes back to where it was
+        bitboards[captured] ^= currentMask;
+        if(captured <= K){
+            whitePieces ^= currentMask;
+        }else{
+            blackPieces ^= currentMask;
+        }
+    }
+
     // Update occupied bitboard
-    occupied ^= currentMask;
     occupied ^= prevMask;
 }
 
@@ -376,13 +397,26 @@ int main(){
     PrintBitboard(occupied);
     GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == 0 ? blackPieces : whitePieces, side);
     PrintMoveList();
+    MakeMove(1);
+    PrintBitboard(occupied);
+    printf("Black BB: \n\n");
+    PrintBitboard(blackPieces);
+    printf("White BB: \n\n");
+    PrintBitboard(whitePieces);
+    UndoMove(1);
+    PrintBitboard(occupied);    
+    printf("Black BB: \n\n");
+    PrintBitboard(blackPieces);
+    printf("White BB: \n\n");
+    PrintBitboard(whitePieces);
     return 0;
 }
 
 /*
  * 
- * Make Move Does not account for capture moves, en passant, castling, etc.
- * Undo Move Does not account for capture moves, en passant, castling, etc.
+ * Make Move Does not account for special moves (promotion, en passant, castling, etc.)
+ * Undo Move Does not account for special moves (promotion, en passant, castling, etc.)
+ * Move Generation still does not account for special moves also (promotion, en passant, castling, etc.)
  * Need to build legal moves by checking if king is in check
  * Implement isInCheck() function later.
  * 
