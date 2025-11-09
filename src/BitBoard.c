@@ -17,7 +17,6 @@ int fullmove;
 
 // Initialize  bitboards to 0s
 void ResetBoardState(){
-
     // Reset game state variables
     side = -1;
     enpassant = -1;
@@ -56,7 +55,6 @@ int CharToPiece(char c){
 
 // Set Piece on square
 void SetPiece(int piece, int square) {
-    // set piece on square
     bitboards[piece] |= 1ULL << square;      
 
     // update white or black bitboard
@@ -67,30 +65,12 @@ void SetPiece(int piece, int square) {
         blackPieces |= 1ULL << square;
     }
 
-    // update occupied and empty bitboard
+    // update occupied bitboard
     occupied |= 1ULL << square;
-}
-
-// Remove piece from square
-void RemovePiece(int piece, int square) {
-    // remove piece from square
-    bitboards[piece] &= ~(1ULL << square);   
-
-    // update white or black bitboard
-    if (piece <= K){
-        whitePieces &= ~(1ULL << square);
-    } 
-    else{
-        blackPieces &= ~(1ULL << square);
-    } 
-
-    // update occupied and empty bitboard
-    occupied &= ~(1ULL << square);
 }
 
 void PrintBitboard(U64 board) {
     printf("\n");
-
     // Print ranks from 8 to 1
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d  ", rank + 1); // Rank label on the left
@@ -111,26 +91,8 @@ void PrintBitboard(U64 board) {
     printf("\n\n");
 }
 
-void PrintGameState(){
-    // Display Current Side
-    side == 0 ? printf("Current Turn: White \n\n") : printf("Current Turn: Black \n\n");
-
-    // Display Enpassant Index
-    enpassant == -1 ? printf("No valid enpassant \n") : printf("En passant at index: %d \n", enpassant);
-
-    // Display castle status
-    if(castle == 0) printf("No castle");
-    printf("Castling rights: ");
-    if(castle & 1)  printf("K");  // White kingside
-    if(castle & 2)  printf("Q");  // White queenside
-    if(castle & 4)  printf("k");  // Black kingside
-    if(castle & 8)  printf("q");  // Black queenside
-    printf("\n");
-}
-
 // Parse FEN String to capture the current game state
 void ParseFEN(char * FEN){
-
     // Parse FEN into 6 fields
     char *fields[6];
     int i = 0;
@@ -216,4 +178,106 @@ void ParseFEN(char * FEN){
 
     // release fen copy
     free(fen_copy);
+}
+
+// Make Move Function
+void MakeMove(int index){
+
+    if (index < 0 || index >= MAX_MOVES || index > moveCount){
+        fprintf(stderr, "%s", "Error: Invalid Move Index\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int piece = moveList[index].piece;
+    int from = moveList[index].from;
+    int to = moveList[index].to;
+    int captured = moveList[index].captured;
+
+    if (from < 0 || from >= 64 || to < 0 || to >= 64) {
+        fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", from, to);
+        exit(EXIT_FAILURE);
+    }
+
+    U64 fromMask = 1ULL << from;
+    U64 toMask = 1ULL << to;
+
+    bitboards[piece] ^= fromMask; // remove piece using fromMask
+    bitboards[piece] ^= toMask;  // add piece using toMask
+
+    // Update the corresponding color bitboard
+    if (piece <= K){
+        whitePieces ^= fromMask;
+        whitePieces ^= toMask;
+    }else{
+        blackPieces ^= fromMask;
+        blackPieces ^= toMask;
+    }
+
+    // Check if the move made is a capture
+    if(captured != -1){
+        // remove captured piece from its bitboard
+        bitboards[captured] ^= toMask;
+
+        // Update corresponding captured pieces bitboard
+        if (captured <= K){
+            whitePieces ^= toMask;
+        }else{
+            blackPieces ^= toMask;
+        }
+    }
+
+    // Update occupied bitboard, from square gets cleared
+    occupied &= ~fromMask;
+    occupied |= toMask;
+}
+
+// Make Undo Move function
+void UndoMove(int index){
+
+    if (index < 0 || index >= MAX_MOVES || index > moveCount){
+        fprintf(stderr, "%s", "Error: Invalid Move Index\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int piece = moveList[index].piece;
+    int prev = moveList[index].from;
+    int current = moveList[index].to;
+    int captured = moveList[index].captured;
+
+    if (prev < 0 || prev >= 64 || current < 0 || current >= 64) {
+        fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", prev, current);
+        exit(EXIT_FAILURE);
+    }
+
+    // Create prevMask and currentMask
+    U64 prevMask = 1ULL << prev;
+    U64 currentMask = 1ULL << current;
+
+    // remove piece using currentMask
+    bitboards[piece] ^= currentMask;
+    // undo move using prevMask
+    bitboards[piece] ^= prevMask;
+
+    // Update the corresponding color bitboard
+    if (piece <= K){
+        whitePieces ^= currentMask;
+        whitePieces ^= prevMask;
+    }else{
+        blackPieces ^= currentMask;
+        blackPieces ^= prevMask;
+    }
+
+    if(captured != -1){
+        // Undo the move, capture goes back to where it was
+        bitboards[captured] ^= currentMask;
+        if(captured <= K){
+            whitePieces ^= currentMask;
+        }else{
+            blackPieces ^= currentMask;
+        }
+    }
+
+    // Update occupied bitboard
+    occupied &= ~currentMask;
+    occupied |= prevMask;
 }

@@ -19,8 +19,6 @@ void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side);
 void ResetMoveList();
 int DetectCapture(int to);
 void AddPromotionMoves(int from, int to, int captured, int side);
-void MakeMove(int index);
-void UndoMove(int index);
 void PrintMoveList();
 
 #endif

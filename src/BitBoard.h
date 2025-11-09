@@ -20,9 +20,10 @@ extern int fullmove;      // fullmove number
 void ResetBoardState();
 int CharToPiece(char c);
 void SetPiece(int piece, int square);
-void RemovePiece(int piece, int square);
 void PrintBitboard(U64 board);
 void PrintGameState();
 void ParseFEN(char * FEN);
+void MakeMove(int index);
+void UndoMove(int index);
 
 #endif
