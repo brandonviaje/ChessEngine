@@ -486,7 +486,7 @@ void PrintMoveList(){
 }
 
 int main(){
-    ParseFEN(en_passant); 
+    ParseFEN(castling_position); 
     PrintBitboard(occupied);
     GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == 0 ? blackPieces : whitePieces, side);
     PrintMoveList();
