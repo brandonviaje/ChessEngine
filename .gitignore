@@ -1,2 +1,4 @@
 .vscode/
 chess_engine
+src/BitBoard.o 
+src/MoveGen.o
