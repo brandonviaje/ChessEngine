@@ -26,7 +26,7 @@ To get a local copy of this chess engine up and running, follow these steps:
 1. **Clone the repository**
 ```bash
 git clone https://github.com/brandonviaje/ChessEngine.git
-cd ChessEngine
+cd ChessEngine/src
 ```
 
 <!-- USAGE EXAMPLES 
