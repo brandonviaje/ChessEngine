@@ -1,28 +1,37 @@
-# Makefile for Chess Engine
-
 # Compiler
 CC = gcc
 
 # Compiler flags
 CFLAGS = -g -Wall
 
+# Source and Include directories
+SRC_DIR = src
+INCLUDE_DIR = src
+
 # Source files
-SRCS = MoveGen.c BitBoard.c
+SRCS = $(SRC_DIR)/BitBoard.c $(SRC_DIR)/MoveGen.c
+
+# Object files
+OBJS = $(SRCS:.c=.o)
 
 # Output executable
-TARGET = Target
+TARGET = chess_engine
 
 # Default target
 all: $(TARGET)
 
 # Build target
-$(TARGET): $(SRCS)
-	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET)
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
-# Run the program
+# Compile
+%.o: %.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
+# Run program
 run: $(TARGET)
 	./$(TARGET)
 
 # Clean build files
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(TARGET) $(OBJS)
