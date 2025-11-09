@@ -29,47 +29,98 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
     U64 rightCapture = side == 0 ? (pawns << 9) & enemyPieces : (pawns >> 9) & enemyPieces;
     
     if(side == 0) {
-        U64 firstPushWhite = (pawns & RANK_2) << 8 & empty; 
+        U64 firstPushWhite = ((pawns & RANK_2) << 8) & empty; 
         doublePush = (firstPushWhite << 8) & empty;        
     } else {
-        U64 firstPushBlack = (pawns & RANK_7) >> 8 & empty;
+        U64 firstPushBlack = ((pawns & RANK_7) >> 8) & empty;
         doublePush = (firstPushBlack >> 8) & empty;
     }
 
+    // Handle en passant
+    if (enpassant != -1) {
+        U64 epSquare = 1ULL << enpassant;
+        U64 epLeft, epRight;
+
+        if (side == 0) {
+            // white pawns that can capture en passant
+            epLeft  = (pawns << 7) & epSquare & ~FILE_H; 
+            epRight = (pawns << 9) & epSquare & ~FILE_A;
+        } else {
+            // black pawns that can capture en passant
+            epLeft  = (pawns >> 9) & epSquare & ~FILE_H; 
+            epRight = (pawns >> 7) & epSquare & ~FILE_A;
+        }
+
+        // Process EP captures
+
+        while (epLeft) {
+            int from = side == 0 ? __builtin_ctzll(epLeft) - 7 : __builtin_ctzll(epLeft) + 9;
+            int to = enpassant;
+            int capturedSquare = side == 0 ? to - 8 : to + 8;
+            int capturedPiece = DetectCapture(capturedSquare);
+            moveList[moveCount++] = (Move){piece, from, to, -1, capturedPiece, FLAG_ENPASSANT};
+            epLeft &= epLeft - 1;
+        }
+
+        while (epRight) {
+            int from = side == 0 ? __builtin_ctzll(epRight) - 9 : __builtin_ctzll(epRight) + 7;
+            int to = enpassant;
+            int capturedSquare = side == 0 ? to - 8 : to + 8;
+            int capturedPiece = DetectCapture(capturedSquare);
+            moveList[moveCount++] = (Move){piece, from, to, -1, capturedPiece, FLAG_ENPASSANT};
+            epRight &= epRight - 1;
+        }
+    }
+
+    // Process quiet and capture moves
     while(singlePush){
         int to = __builtin_ctzll(singlePush);
         int from = side == 0 ? to - 8 : to + 8;
-        moveList[moveCount++] = (Move){piece, from, to, 0, -1};// add to move list
+
+        // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
+        if ((side == 0 && ((1ULL << to) & RANK_8)) || (side == 1 && ((1ULL << to) & RANK_1))){
+            AddPromotionMoves(from, to, -1, side);
+        }else{
+            moveList[moveCount++] = (Move){piece, from, to, -1, -1, FLAG_NONE}; // add to move list
+        }
+
         singlePush &= singlePush - 1; // remove LSB
     }
 
     while(doublePush){
         int to = __builtin_ctzll(doublePush);
         int from = side == 0 ? to - 16 : to + 16;
-        moveList[moveCount++] = (Move){piece, from, to, 0, -1}; // add to move list
+        moveList[moveCount++] = (Move){piece, from, to, -1, -1, FLAG_NONE}; // add to move list
         doublePush &= doublePush - 1; // remove LSB
     }
 
     while(leftCapture){
         int to = __builtin_ctzll(leftCapture);
         int from = side == 0 ? to - 7 : to + 9;
-
-        // Detect Captures
         int captured = DetectCapture(to);
 
-        // Add to move list
-        moveList[moveCount++] = (Move){piece, from, to, 0, captured};
+        // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
+        if ((side == 0 && ((1ULL << to) & RANK_8)) || (side == 1 && ((1ULL << to) & RANK_1))){
+            AddPromotionMoves(from, to, captured, side);
+        }else{
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // add to move list
+        }
+
         leftCapture &= leftCapture - 1; // remove LSB
     }
 
     while(rightCapture){
         int to = __builtin_ctzll(rightCapture);
         int from = side == 0 ? to - 9 : to + 7;
-
-        // Detect Captures
         int captured = DetectCapture(to);
-        // Add to move list
-        moveList[moveCount++] = (Move){piece, from, to, 0, captured};
+
+        // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
+        if ((side == 0 && ((1ULL << to) & RANK_8)) || (side == 1 && ((1ULL << to) & RANK_1))){
+            AddPromotionMoves(from, to, captured, side);
+        }else{
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // add to move list
+        }
+        
         rightCapture &= rightCapture - 1; // remove LSB (done processing this piece)
     }
 }
@@ -107,7 +158,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece)
             int captured = DetectCapture(to);
 
             //Add to move list
-            moveList[moveCount++] = (Move){piece, from, to, 0, captured};
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
         }
         knightsCopy &= knightsCopy - 1; // remove processed knight
     }
@@ -140,13 +191,40 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
 
             // Detect Captures
             int captured = DetectCapture(to);
-
             // Add to move list
-            moveList[moveCount++] = (Move){piece, from, to, 0 , captured}; 
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; 
         }
         // remove LSB of kings copy
         kingsCopy &= kingsCopy - 1;
     }
+
+    // Castling 
+    if(piece == K){ // white king
+        int from = __builtin_ctzll(king);
+
+        // white kingside: check if castling is available by checking empty squares
+        if((castle & (1<<0)) && !(occupied & ((1ULL<<5)|(1ULL<<6))) /* squares between empty */){
+            moveList[moveCount++] = (Move){piece, from, 6, -1, -1, FLAG_CASTLING};
+        }
+
+        // white queenside: check if castling is available by checking empty squares
+        if((castle & (1<<1)) && !(occupied & ((1ULL<<1)|(1ULL<<2)|(1ULL<<3))) ){
+            moveList[moveCount++] = (Move){piece, from, 2, -1, -1, FLAG_CASTLING};
+        }
+    }else if(piece == k){ // black king
+        int from = __builtin_ctzll(king);
+
+        // black kingside: check if castling is available by checking empty squares
+        if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){
+            moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLING};
+        }
+
+        // black queenside: check if castling is available by checking empty squares
+        if((castle & (1<<3)) && !(occupied & ((1ULL<<57)|(1ULL<<58)|(1ULL<<59))) ){
+            moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLING};
+        }
+    }
+
 }
 
 void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces,int piece) {
@@ -176,7 +254,7 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces,int piece) {
                 int captured = DetectCapture(to);
 
                 // Add to move list
-                moveList[moveCount++] = (Move){piece, from, to, 0, captured};
+                moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
 
                 // stop sliding after capturing
                 if (enemyPieces & (1ULL << to)) break;
@@ -215,7 +293,7 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece)
                 int captured = DetectCapture(to);
 
                 // Add to move list
-                moveList[moveCount++] = (Move){piece, from, to, 0, captured};
+                moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
 
                 // stop sliding after capture
                 if (enemyPieces & (1ULL << to)) break;
@@ -276,6 +354,21 @@ int DetectCapture(int to) {
         }
     }
     return captured;
+}
+
+// Add promotion moves for pawns
+void AddPromotionMoves(int from, int to, int captured, int side) {
+    if(side == 0){
+        moveList[moveCount++] = (Move){P, from, to, Q, captured, FLAG_PROMOTION};
+        moveList[moveCount++] = (Move){P, from, to, R, captured, FLAG_PROMOTION};
+        moveList[moveCount++] = (Move){P, from, to, B, captured, FLAG_PROMOTION};
+        moveList[moveCount++] = (Move){P, from, to, N, captured, FLAG_PROMOTION};
+    } else {
+        moveList[moveCount++] = (Move){p, from, to, q, captured, FLAG_PROMOTION};
+        moveList[moveCount++] = (Move){p, from, to, r, captured, FLAG_PROMOTION};
+        moveList[moveCount++] = (Move){p, from, to, b, captured, FLAG_PROMOTION};
+        moveList[moveCount++] = (Move){p, from, to, n, captured, FLAG_PROMOTION};
+    }
 }
 
 // Make Move Function
@@ -393,22 +486,10 @@ void PrintMoveList(){
 }
 
 int main(){
-    ParseFEN(queen_attack_position); 
+    ParseFEN(en_passant); 
     PrintBitboard(occupied);
     GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == 0 ? blackPieces : whitePieces, side);
     PrintMoveList();
-    MakeMove(1);
-    PrintBitboard(occupied);
-    printf("Black BB: \n\n");
-    PrintBitboard(blackPieces);
-    printf("White BB: \n\n");
-    PrintBitboard(whitePieces);
-    UndoMove(1);
-    PrintBitboard(occupied);    
-    printf("Black BB: \n\n");
-    PrintBitboard(blackPieces);
-    printf("White BB: \n\n");
-    PrintBitboard(whitePieces);
     return 0;
 }
 
@@ -416,8 +497,7 @@ int main(){
  * 
  * Make Move Does not account for special moves (promotion, en passant, castling, etc.)
  * Undo Move Does not account for special moves (promotion, en passant, castling, etc.)
- * Move Generation still does not account for special moves also (promotion, en passant, castling, etc.)
  * Need to build legal moves by checking if king is in check
- * Implement isInCheck() function later.
+ * Implement IsInCheck() function later.
  * 
  */
