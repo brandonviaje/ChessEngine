@@ -1,4 +1,4 @@
-# ChessEngine
+# Chess Engine
 
 ## About The Project
 
