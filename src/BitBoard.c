@@ -181,6 +181,7 @@ void ParseFEN(char * FEN){
 }
 
 // Make Move Function
+// Must include special moves
 void MakeMove(int index){
 
     if (index < 0 || index >= MAX_MOVES || index > moveCount){
