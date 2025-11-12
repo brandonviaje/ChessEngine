@@ -21,14 +21,14 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
     U64 empty = ~(ownPieces | enemyPieces);
 
     // Generate all single & double push moves for corresponding sides
-    U64 singlePush = side == 0 ? (pawns << 8) & empty : (pawns >> 8) & empty;
+    U64 singlePush = side == WHITE ? (pawns << 8) & empty : (pawns >> 8) & empty;
     U64 doublePush = 0;
 
     // Generate capture moves: left and right capture for corresponding sides
-    U64 leftCapture = side == 0 ? (pawns << 7) & enemyPieces : (pawns >> 7) & enemyPieces;
-    U64 rightCapture = side == 0 ? (pawns << 9) & enemyPieces : (pawns >> 9) & enemyPieces;
+    U64 leftCapture = side == WHITE ? (pawns << 7) & enemyPieces : (pawns >> 7) & enemyPieces;
+    U64 rightCapture = side == WHITE ? (pawns << 9) & enemyPieces : (pawns >> 9) & enemyPieces;
     
-    if(side == 0) {
+    if(side == WHITE) {
         U64 firstPushWhite = ((pawns & RANK_2) << 8) & empty; 
         doublePush = (firstPushWhite << 8) & empty;        
     } else {
@@ -41,7 +41,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
         U64 epSquare = 1ULL << enpassant;
         U64 epLeft, epRight;
 
-        if (side == 0) {
+        if (side == WHITE) {
             // white pawns that can capture en passant
             epLeft  = (pawns << 7) & epSquare & ~FILE_H; 
             epRight = (pawns << 9) & epSquare & ~FILE_A;
@@ -54,18 +54,18 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
         // Process EP captures
 
         while (epLeft) {
-            int from = side == 0 ? __builtin_ctzll(epLeft) - 7 : __builtin_ctzll(epLeft) + 9;
+            int from = side == WHITE ? __builtin_ctzll(epLeft) - 7 : __builtin_ctzll(epLeft) + 9;
             int to = enpassant;
-            int capturedSquare = side == 0 ? to - 8 : to + 8;
+            int capturedSquare = side == WHITE ? to - 8 : to + 8;
             int capturedPiece = DetectCapture(capturedSquare);
             moveList[moveCount++] = (Move){piece, from, to, -1, capturedPiece, FLAG_ENPASSANT};
             epLeft &= epLeft - 1;
         }
 
         while (epRight) {
-            int from = side == 0 ? __builtin_ctzll(epRight) - 9 : __builtin_ctzll(epRight) + 7;
+            int from = side == WHITE ? __builtin_ctzll(epRight) - 9 : __builtin_ctzll(epRight) + 7;
             int to = enpassant;
-            int capturedSquare = side == 0 ? to - 8 : to + 8;
+            int capturedSquare = side == WHITE ? to - 8 : to + 8;
             int capturedPiece = DetectCapture(capturedSquare);
             moveList[moveCount++] = (Move){piece, from, to, -1, capturedPiece, FLAG_ENPASSANT};
             epRight &= epRight - 1;
@@ -75,10 +75,10 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
     // Process quiet and capture moves
     while(singlePush){
         int to = __builtin_ctzll(singlePush);
-        int from = side == 0 ? to - 8 : to + 8;
+        int from = side == WHITE ? to - 8 : to + 8;
 
         // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
-        if ((side == 0 && ((1ULL << to) & RANK_8)) || (side == 1 && ((1ULL << to) & RANK_1))){
+        if ((side == WHITE && ((1ULL << to) & RANK_8)) || (side == BLACK && ((1ULL << to) & RANK_1))){
             AddPromotionMoves(from, to, -1, side);
         }else{
             moveList[moveCount++] = (Move){piece, from, to, -1, -1, FLAG_NONE}; // add to move list
@@ -89,18 +89,18 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
 
     while(doublePush){
         int to = __builtin_ctzll(doublePush);
-        int from = side == 0 ? to - 16 : to + 16;
+        int from = side == WHITE ? to - 16 : to + 16;
         moveList[moveCount++] = (Move){piece, from, to, -1, -1, FLAG_NONE}; // add to move list
         doublePush &= doublePush - 1; // remove LSB
     }
 
     while(leftCapture){
         int to = __builtin_ctzll(leftCapture);
-        int from = side == 0 ? to - 7 : to + 9;
+        int from = side == WHITE ? to - 7 : to + 9;
         int captured = DetectCapture(to);
 
         // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
-        if ((side == 0 && ((1ULL << to) & RANK_8)) || (side == 1 && ((1ULL << to) & RANK_1))){
+        if ((side == WHITE && ((1ULL << to) & RANK_8)) || (side == BLACK && ((1ULL << to) & RANK_1))){
             AddPromotionMoves(from, to, captured, side);
         }else{
             moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // add to move list
@@ -111,11 +111,11 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
 
     while(rightCapture){
         int to = __builtin_ctzll(rightCapture);
-        int from = side == 0 ? to - 9 : to + 7;
+        int from = side == WHITE ? to - 9 : to + 7;
         int captured = DetectCapture(to);
 
         // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
-        if ((side == 0 && ((1ULL << to) & RANK_8)) || (side == 1 && ((1ULL << to) & RANK_1))){
+        if ((side == WHITE && ((1ULL << to) & RANK_8)) || (side == BLACK && ((1ULL << to) & RANK_1))){
             AddPromotionMoves(from, to, captured, side);
         }else{
             moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // add to move list
@@ -204,24 +204,24 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
 
         // white kingside: check if castling is available by checking empty squares
         if((castle & (1<<0)) && !(occupied & ((1ULL<<5)|(1ULL<<6))) /* squares between empty */){
-            moveList[moveCount++] = (Move){piece, from, 6, -1, -1, FLAG_CASTLING};
+            moveList[moveCount++] = (Move){piece, from, 6, -1, -1, FLAG_CASTLE_KINGSIDE};
         }
 
         // white queenside: check if castling is available by checking empty squares
         if((castle & (1<<1)) && !(occupied & ((1ULL<<1)|(1ULL<<2)|(1ULL<<3))) ){
-            moveList[moveCount++] = (Move){piece, from, 2, -1, -1, FLAG_CASTLING};
+            moveList[moveCount++] = (Move){piece, from, 2, -1, -1, FLAG_CASTLE_QUEENSIDE};
         }
     }else if(piece == k){ // black king
         int from = __builtin_ctzll(king);
 
         // black kingside: check if castling is available by checking empty squares
         if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){
-            moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLING};
+            moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLE_KINGSIDE};
         }
 
         // black queenside: check if castling is available by checking empty squares
         if((castle & (1<<3)) && !(occupied & ((1ULL<<57)|(1ULL<<58)|(1ULL<<59))) ){
-            moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLING};
+            moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLE_QUEENSIDE};
         }
     }
 
@@ -311,16 +311,16 @@ void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece){
 
 void GeneratePseudoLegalMovesInternal(U64 Pawn, U64 Knight, U64 Bishop, U64 Rook, U64 Queen, U64 King, U64 ownPieces, U64 enemyPieces, int side) {
     ResetMoveList();
-    GeneratePawnMoves(Pawn, ownPieces, enemyPieces, side, side == 0 ? P : p);
-    GenerateKnightMoves(Knight, ownPieces, enemyPieces, side == 0 ? N : n);
-    GenerateBishopMoves(Bishop, ownPieces, enemyPieces, side == 0 ? B : b);
-    GenerateRookMoves(Rook, ownPieces, enemyPieces, side == 0 ? R : r);
-    GenerateQueenMoves(Queen, ownPieces, enemyPieces, side == 0 ? Q : q);
-    GenerateKingMoves(King, ownPieces, enemyPieces, side == 0 ? K : k);
+    GeneratePawnMoves(Pawn, ownPieces, enemyPieces, side, side == WHITE ? P : p);
+    GenerateKnightMoves(Knight, ownPieces, enemyPieces, side == WHITE ? N : n);
+    GenerateBishopMoves(Bishop, ownPieces, enemyPieces, side == WHITE ? B : b);
+    GenerateRookMoves(Rook, ownPieces, enemyPieces, side == WHITE ? R : r);
+    GenerateQueenMoves(Queen, ownPieces, enemyPieces, side == WHITE ? Q : q);
+    GenerateKingMoves(King, ownPieces, enemyPieces, side == WHITE ? K : k);
 }
 
 void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side) {
-    if (side == 0) {  // white
+    if (side == WHITE) {  // white
         GeneratePseudoLegalMovesInternal(bitboards[P], bitboards[N], bitboards[B], bitboards[R], bitboards[Q], bitboards[K],ownPieces, enemyPieces, side);
     } else {  // black
         GeneratePseudoLegalMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k],ownPieces, enemyPieces, side);
@@ -347,7 +347,7 @@ int DetectCapture(int to) {
     int captured = -1;
     
     // Detect Captures on the Enemy side bitboards
-    for (int i = (side == 0 ? 6 : 0); i < (side == 0 ? 12 : 6); i++){
+    for (int i = (side == WHITE ? 6 : 0); i < (side == WHITE ? 12 : 6); i++){
         if (bitboards[i] & (1ULL << to)){
             captured = i;
             break;
@@ -386,9 +386,13 @@ void PrintMoveList(){
 }
 
 int main(){
-    ParseFEN(starting_position); 
+    ParseFEN(castling_position); 
     PrintBitboard(occupied);
-    GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == 0 ? blackPieces : whitePieces, side);
+    GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
     PrintMoveList();
+    MakeMove(24);
+    PrintBitboard(occupied);
+    UndoMove(24);
+    PrintBitboard(occupied);
     return 0;
 }

@@ -21,12 +21,15 @@
 #define pawn_promotion "8/4P3/8/8/8/8/4p3/8 w - - 0 1"
 #define castling_position "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"
 
-// Move Types
+// Color & Move Types
 #define MAX_MOVES      256
 #define FLAG_NONE        0
 #define FLAG_ENPASSANT   1
-#define FLAG_CASTLING    2
-#define FLAG_PROMOTION   3
+#define FLAG_CASTLE_KINGSIDE  2
+#define FLAG_CASTLE_QUEENSIDE 3
+#define FLAG_PROMOTION   4
+#define WHITE            0
+#define BLACK            1
 
 // Typedef
 typedef unsigned long long U64;
@@ -36,7 +39,7 @@ typedef enum {
     p, n, b, r, q, k    // black
 } Pieces;
 
-typedef struct {
+typedef struct{
     int piece;
     int from;    // square index the piece moves from
     int to;      // square index the piece moves to
