@@ -153,12 +153,8 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece)
             if ((1ULL << from & unsafeFiles[i]) || (1ULL << from & unsafeRanks[i])) continue;
             if (to < 0 || to > 63) continue;
             if(ownPieces & (1ULL << to)) continue;
-
-            // Detect Captures
-            int captured = DetectCapture(to);
-
-            //Add to move list
-            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
+            int captured = DetectCapture(to); // Detect Captures            
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; //Add to move list
         }
         knightsCopy &= knightsCopy - 1; // remove processed knight
     }
@@ -188,11 +184,9 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
             if ((1ULL << from & unsafeFiles[i]) || (1ULL << from & unsafeRanks[i])) continue;            
             if (to < 0 || to > 63) continue;
             if (ownPieces & (1ULL << to)) continue;
-
-            // Detect Captures
-            int captured = DetectCapture(to);
-            // Add to move list
-            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; 
+            
+            int captured = DetectCapture(to); // Detect Captures
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // Add to move list
         }
         // remove LSB of kings copy
         kingsCopy &= kingsCopy - 1;
@@ -213,7 +207,6 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
         }
     }else if(piece == k){ // black king
         int from = __builtin_ctzll(king);
-
         // black kingside: check if castling is available by checking empty squares
         if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){
             moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLE_KINGSIDE};
@@ -224,7 +217,6 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
             moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLE_QUEENSIDE};
         }
     }
-
 }
 
 void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces,int piece) {
@@ -327,9 +319,8 @@ void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side) {
     }
 }
 
-// Reset Move List
+// Reset Move List and Move Count
 void ResetMoveList(){
-    // Reset move list array and moveCount
     memset(moveList, 0, sizeof(moveList));
     moveCount = 0;
 }
@@ -372,7 +363,6 @@ void PrintMoveList(){
         char rank_from = '1' + (from / 8);
         char file_to   = 'a' + (to % 8);
         char rank_to   = '1' + (to / 8);
-
         printf("Move %d: %c%c -> %c%c\n", i+1, file_from, rank_from, file_to, rank_to);
     }
 }

@@ -1,14 +1,12 @@
 #include "BitBoard.h"
 
 // Bitboards
-
 U64 bitboards[12];
 U64 whitePieces;     
 U64 blackPieces;     
 U64 occupied;        
 
 // Game states
-
 int side; // 0 = white, 1 = black
 int enpassant;
 unsigned char castle;
@@ -58,15 +56,10 @@ void SetPiece(int piece, int square) {
     bitboards[piece] |= 1ULL << square;      
 
     // update white or black bitboard
-    if (piece <= K){
-        whitePieces |= 1ULL << square;
-    }
-    else {
-        blackPieces |= 1ULL << square;
-    }
+    if (piece <= K) whitePieces |= 1ULL << square;
+    else  blackPieces |= 1ULL << square;
 
-    // update occupied bitboard
-    occupied |= 1ULL << square;
+    occupied |= 1ULL << square; // update occupied bitboard
 }
 
 void PrintBitboard(U64 board) {
@@ -144,12 +137,10 @@ void ParseFEN(char * FEN){
         int square = rank * 8 + file;
         SetPiece(piece,square);
 
-        // Update file
-        file++;
+        file++; // increment file
     }
 
-    // Current side
-    side = (fields[1][0] == 'w') ? WHITE : BLACK;
+    side = (fields[1][0] == 'w') ? WHITE : BLACK; // Current side
 
     // Castling rights
     for (int j = 0; j < strlen(fields[2]); j++) {
@@ -170,19 +161,14 @@ void ParseFEN(char * FEN){
         enpassant = rank_ep * 8 + file_ep;
     }
 
-    // Halfmove clock
-    halfmove = atoi(fields[4]);
-
-    // Fullmove number 
-    fullmove = atoi(fields[5]);
-
-    // release fen copy
-    free(fen_copy);
+    halfmove = atoi(fields[4]); // Halfmove clock
+    fullmove = atoi(fields[5]); // Fullmove number 
+    free(fen_copy); // dealloc memory
 }
 
 // Make Move Function
 void MakeMove(int index){
-
+    // Catch move index out of bounds
     if (index < 0 || index >= MAX_MOVES || index > moveCount){
         fprintf(stderr, "%s", "Error: Invalid Move Index\n");
         exit(EXIT_FAILURE);
@@ -195,6 +181,7 @@ void MakeMove(int index){
     int promotedPiece = moveList[index].promotion;
     int moveFlag = moveList[index].flags;
 
+    // Catch square index out of bounds
     if (from < 0 || from >= 64 || to < 0 || to >= 64) {
         fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", from, to);
         exit(EXIT_FAILURE);
@@ -371,7 +358,7 @@ void MakeMove(int index){
 
 // Undo Move Function
 void UndoMove(int index) {
-
+    // Catch move index out of bounds
     if (index < 0 || index >= MAX_MOVES || index > moveCount) {
         fprintf(stderr, "%s", "Error: Invalid Move Index\n");
         exit(EXIT_FAILURE);
@@ -384,6 +371,7 @@ void UndoMove(int index) {
     int promotedPiece = moveList[index].promotion;
     int moveFlag = moveList[index].flags;
 
+     // Catch square index out of bounds
     if (from < 0 || from >= 64 || to < 0 || to >= 64) {
         fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", from, to);
         exit(EXIT_FAILURE);
@@ -394,7 +382,6 @@ void UndoMove(int index) {
     U64 toMask = 1ULL << to;
 
     switch (moveFlag) {
-
         case FLAG_CASTLE_KINGSIDE: {
             // move king back
             bitboards[piece] ^= toMask;
@@ -431,7 +418,6 @@ void UndoMove(int index) {
             occupied |= fromMask;
             occupied &= ~moveRookMask;
             occupied |= rookMask;
-
             break;
         }
 
