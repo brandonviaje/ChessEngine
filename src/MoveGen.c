@@ -327,14 +327,6 @@ void GeneratePseudoLegalMoves(U64 ownPieces, U64 enemyPieces, int side) {
     }
 }
 
-/**
- * 
- * 
- * HELPER FUNCTIONS
- * 
- * 
- */
-
 // Reset Move List
 void ResetMoveList(){
     // Reset move list array and moveCount
@@ -358,7 +350,7 @@ int DetectCapture(int to) {
 
 // Add promotion moves for pawns
 void AddPromotionMoves(int from, int to, int captured, int side) {
-    if(side == 0){
+    if(side == WHITE){
         moveList[moveCount++] = (Move){P, from, to, Q, captured, FLAG_PROMOTION};
         moveList[moveCount++] = (Move){P, from, to, R, captured, FLAG_PROMOTION};
         moveList[moveCount++] = (Move){P, from, to, B, captured, FLAG_PROMOTION};
@@ -388,7 +380,7 @@ void PrintMoveList(){
 int main(){
     ParseFEN(castling_position); 
     PrintBitboard(occupied);
-    GeneratePseudoLegalMoves(side == 0 ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
+    GeneratePseudoLegalMoves(side == WHITE ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
     PrintMoveList();
     MakeMove(24);
     PrintBitboard(occupied);
