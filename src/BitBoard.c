@@ -169,7 +169,7 @@ void ParseFEN(char * FEN){
 // Make Move Function
 void MakeMove(int index){
     // Catch move index out of bounds
-    if (index < 0 || index >= MAX_MOVES || index > moveCount){
+    if (index < 0 || index >= MAX_MOVES){
         fprintf(stderr, "%s", "Error: Invalid Move Index\n");
         exit(EXIT_FAILURE);
     }
@@ -353,12 +353,13 @@ void MakeMove(int index){
     // update occupied bitboard, from square gets cleared, piece gets added
     occupied &= ~fromMask;
     occupied |= toMask;
+    side ^= 1;
 }
 
 // Undo Move Function
 void UndoMove(int index) {
     // Catch move index out of bounds
-    if (index < 0 || index >= MAX_MOVES || index > moveCount) {
+    if (index < 0 || index >= MAX_MOVES) {
         fprintf(stderr, "%s", "Error: Invalid Move Index\n");
         exit(EXIT_FAILURE);
     }
@@ -387,7 +388,7 @@ void UndoMove(int index) {
             bitboards[piece] ^= fromMask;
 
             U64 rookMask, moveRookMask;
-            if (side == WHITE) { // undoing White's move
+            if (side == BLACK) { // undoing White's move
                 rookMask = 1ULL << 7;           // h1 rook
                 moveRookMask = 1ULL << (to - 1); // f1
                 bitboards[R] ^= moveRookMask;
@@ -424,7 +425,7 @@ void UndoMove(int index) {
             bitboards[piece] ^= fromMask;
 
             U64 rookMask, moveRookMask;
-            if (side == WHITE) { // undoing White's move
+            if (side == BLACK) { // undoing White's move
                 rookMask = 1ULL << 0;           // a1 rook
                 moveRookMask = 1ULL << (to + 1); // d1
                 bitboards[R] ^= moveRookMask;
@@ -531,4 +532,5 @@ void UndoMove(int index) {
     // Update occupied
     occupied &= ~toMask;
     occupied |= fromMask;
+    side ^= 1;
 }

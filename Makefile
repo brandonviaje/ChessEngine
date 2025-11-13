@@ -6,10 +6,11 @@ CFLAGS = -g -Wall
 
 # Source and Include directories
 SRC_DIR = src
+TEST_DIR = tests
 INCLUDE_DIR = src
 
 # Source files
-SRCS = $(SRC_DIR)/BitBoard.c $(SRC_DIR)/MoveGen.c
+SRCS = $(SRC_DIR)/BitBoard.c $(SRC_DIR)/MoveGen.c $(SRC_DIR)/Attack.c $(TEST_DIR)/Perft.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)

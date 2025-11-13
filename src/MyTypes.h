@@ -19,7 +19,7 @@
 #define make_move "rnbqkbnr/p1pppppp/8/1p6/2P5/8/8/8 w KQkq - 0 1"
 #define en_passant "8/8/8/3pP3/8/8/8/8 w - d6 0 1"
 #define pawn_promotion "8/4P3/8/8/8/8/4p3/8 w - - 0 1"
-#define castling_position "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"
+#define castling_position "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"
 #define kiwipete "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -"
 
 // Color & Move Types

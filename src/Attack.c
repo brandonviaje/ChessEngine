@@ -1,8 +1,8 @@
 #include "Attack.h"
 
 // Global variables
-Move moveList[256]; 
-int moveCount = 0;
+extern Move moveList[256]; 
+extern int moveCount;
 
 //BitBoards
 extern U64 bitboards[12];
@@ -12,41 +12,32 @@ extern U64 occupied;
 
 // Game State
 extern int side;
-extern int enpassant;  
-extern unsigned char castle; 
-extern int halfmove;      
-extern int fullmove;  
 
 int IsInCheck() {
-    // Find king square of the current side
+    // get king square of current side
     int kingSquare = __builtin_ctzll(side == WHITE ? bitboards[K] : bitboards[k]);
 
-    // Save current move list, move count and side
+    // save current move list and count
     Move savedMoves[256];
     memcpy(savedMoves, moveList, sizeof(moveList));
     int savedMoveCount = moveCount;
-    int savedSide = side;
 
-    // Set bitboards according to side
-    U64 ownPieces = (side == WHITE ? whitePieces : blackPieces);
-    U64 enemyPieces = (side == WHITE? blackPieces : whitePieces);
+    // Generate moves for opponent
+    U64 enemyPieces = (side == WHITE ? blackPieces : whitePieces);
+    U64 ownPieces   = (side == WHITE ? whitePieces : blackPieces);
 
-    //  Generate opponent moves
-    side ^= 1; // switch to enemy turn
-    GeneratePseudoLegalMoves(enemyPieces, ownPieces, side);
-    side = savedSide;  // restore turn
+    GeneratePseudoLegalMoves(enemyPieces, ownPieces, side ^ 1);
 
-    // Scan for checks 
+    // Scan moves to see if any attack king square
     for (int i = 0; i < moveCount; i++) {
         if (moveList[i].to == kingSquare) {
-            // restore movelist, then return 1
             memcpy(moveList, savedMoves, sizeof(moveList));
             moveCount = savedMoveCount;
-            return 1;
+            return 1; // king is in check
         }
     }
 
-    // restore move list
+    // restore movelist
     memcpy(moveList, savedMoves, sizeof(moveList));
     moveCount = savedMoveCount;
     return 0; // no check found

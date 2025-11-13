@@ -368,13 +368,10 @@ void PrintMoveList(){
 }
 
 int main(){
-    ParseFEN(castling_position); 
-    PrintBitboard(occupied);
-    GeneratePseudoLegalMoves(side == WHITE ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
-    PrintMoveList();
-    MakeMove(24);
-    PrintBitboard(occupied);
-    UndoMove(24);
-    PrintBitboard(occupied);
+    ParseFEN(starting_position); 
+    for(int i = 0; i<=5;i++){
+        U64 node = Perft(i);
+        printf("Perft at depth %d: %llu \n",i,node);
+    }
     return 0;
 }

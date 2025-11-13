@@ -3,6 +3,7 @@
 #include "Masks.h"
 #include "MyTypes.h"
 #include "BitBoard.h"
+#include "../tests/Perft.h"
 
 extern Move moveList[256];
 extern int moveCount;
