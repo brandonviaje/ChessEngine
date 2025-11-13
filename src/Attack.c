@@ -17,24 +17,37 @@ extern unsigned char castle;
 extern int halfmove;      
 extern int fullmove;  
 
+int IsInCheck() {
+    // Find king square of the current side
+    int kingSquare = __builtin_ctzll(side == WHITE ? bitboards[K] : bitboards[k]);
 
-int IsInCheck(){
+    // Save current move list, move count and side
+    Move savedMoves[256];
+    memcpy(savedMoves, moveList, sizeof(moveList));
+    int savedMoveCount = moveCount;
+    int savedSide = side;
 
-    // Generate pseudo legal moves after making a move
-    GeneratePseudoLegalMoves(side == WHITE ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
-    U64 kingPosition = side == WHITE ? bitboards[K] : bitboards[k];
+    // Set bitboards according to side
+    U64 ownPieces = (side == WHITE ? whitePieces : blackPieces);
+    U64 enemyPieces = (side == WHITE? blackPieces : whitePieces);
 
-    // iterate through move list, if the piece type is of the opposite color, check if the to part is where the king resides
-    for(int i = 0; i <= moveCount; i++){
-        if(moveList[i].piece <= K && side == BLACK){
-            if(moveList[i].to == kingPosition){
-                return 1;
-            }
-        }else{
-            if(moveList[i].to == kingPosition){
-                return 1;
-            }
-        }   
+    //  Generate opponent moves
+    side ^= 1; // switch to enemy turn
+    GeneratePseudoLegalMoves(enemyPieces, ownPieces, side);
+    side = savedSide;  // restore turn
+
+    // Scan for checks 
+    for (int i = 0; i < moveCount; i++) {
+        if (moveList[i].to == kingSquare) {
+            // restore movelist, then return 1
+            memcpy(moveList, savedMoves, sizeof(moveList));
+            moveCount = savedMoveCount;
+            return 1;
+        }
     }
-    return 0; // did not find any moves 
+
+    // restore move list
+    memcpy(moveList, savedMoves, sizeof(moveList));
+    moveCount = savedMoveCount;
+    return 0; // no check found
 }

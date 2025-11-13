@@ -353,7 +353,6 @@ void MakeMove(int index){
     // update occupied bitboard, from square gets cleared, piece gets added
     occupied &= ~fromMask;
     occupied |= toMask;
-    side ^= 1; // switch turns
 }
 
 // Undo Move Function
@@ -388,7 +387,7 @@ void UndoMove(int index) {
             bitboards[piece] ^= fromMask;
 
             U64 rookMask, moveRookMask;
-            if (side == BLACK) { // undoing White's move
+            if (side == WHITE) { // undoing White's move
                 rookMask = 1ULL << 7;           // h1 rook
                 moveRookMask = 1ULL << (to - 1); // f1
                 bitboards[R] ^= moveRookMask;
@@ -414,8 +413,6 @@ void UndoMove(int index) {
             }
 
             // Update occupied
-            occupied &= ~toMask;
-            occupied |= fromMask;
             occupied &= ~moveRookMask;
             occupied |= rookMask;
             break;
@@ -427,7 +424,7 @@ void UndoMove(int index) {
             bitboards[piece] ^= fromMask;
 
             U64 rookMask, moveRookMask;
-            if (side == BLACK) { // undoing White's move
+            if (side == WHITE) { // undoing White's move
                 rookMask = 1ULL << 0;           // a1 rook
                 moveRookMask = 1ULL << (to + 1); // d1
                 bitboards[R] ^= moveRookMask;
@@ -453,8 +450,6 @@ void UndoMove(int index) {
             }
 
             // Update occupied
-            occupied &= ~toMask;
-            occupied |= fromMask;
             occupied &= ~moveRookMask;
             occupied |= rookMask;
             break;
@@ -482,8 +477,6 @@ void UndoMove(int index) {
             else blackPieces ^= capturedMask;
 
             // Update occupied
-            occupied &= ~toMask;
-            occupied |= fromMask;
             occupied |= capturedMask;
             break;
         }
@@ -491,9 +484,7 @@ void UndoMove(int index) {
         case FLAG_PROMOTION: {
             // remove promoted piece
             bitboards[promotedPiece] ^= toMask;
-
-            // restore pawn
-            bitboards[piece] ^= fromMask;
+            bitboards[piece] ^= fromMask; // restore pawn
 
             if (piece <= K){
                 whitePieces ^= fromMask;
@@ -510,9 +501,6 @@ void UndoMove(int index) {
                 else blackPieces ^= toMask;
             }
 
-            // Update occupied
-            occupied &= ~toMask;
-            occupied |= fromMask;
             if (captured != -1) occupied |= toMask;
             break;
         }
@@ -535,13 +523,12 @@ void UndoMove(int index) {
                 if (captured <= K) whitePieces ^= toMask;
                 else blackPieces ^= toMask;
             }
-
-            // Update occupied
-            occupied &= ~toMask;
-            occupied |= fromMask;
             if (captured != -1) occupied |= toMask;
             break;
         }
     }
-    side ^= 1; // switch back to previous player
+
+    // Update occupied
+    occupied &= ~toMask;
+    occupied |= fromMask;
 }
