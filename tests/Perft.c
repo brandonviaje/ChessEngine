@@ -3,10 +3,9 @@
 // Global variables
 extern Move moveList[256]; 
 extern int moveCount;
-
-// Game State
+extern U64 whitePieces;
+extern U64 blackPieces;
 extern int side; 
-
 
 U64 Perft(int depth){
     U64 nodes = 0ULL;
