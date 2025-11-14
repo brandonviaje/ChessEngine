@@ -113,20 +113,20 @@ void ParseFEN(char * FEN){
 
     for(int i = 0; i < strlen(fields[0]); i++){
         // Check if you reach a delimiter
-        if(FEN[i] == '/'){
+        if(fields[0][i] == '/'){
             rank--;
             file = 0;
             continue;
         }
         
         // If you get an int n skip n squares 
-        if(isdigit(FEN[i])){
-            file += FEN[i] -'0';
+        if(isdigit(fields[0][i])){
+            file += fields[0][i] -'0';
             continue;
         }
 
         // Update corresponding bitboard
-        int piece = CharToPiece(FEN[i]);
+        int piece = CharToPiece(fields[0][i]);
 
         if(piece == -1){
             fprintf(stderr, "Error: Invalid FEN Notation!\n");
