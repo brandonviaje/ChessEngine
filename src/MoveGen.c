@@ -135,7 +135,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece)
 
         while(moves){ 
             int to = __builtin_ctzll(moves); 
-            int captured = (enemyPieces & (1ULL << to)) ? DetectCapture(to) : -1; 
+            int captured = DetectCapture(to); 
             moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; 
             moves &= moves - 1; // remove LSB 
         } 
@@ -150,12 +150,12 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece) {
 
     while (kingsCopy) {
         int from = __builtin_ctzll(kingsCopy);
-        U64 moves = kingMoves[from] & ~ownPieces; // generate all moves at that square with precomputed table
+        U64 moves = kingMoves[from] & ~ownPieces; // generate all moves at that square
 
         // Process quiet moves
         while (moves) {
             int to = __builtin_ctzll(moves);
-            int captured = (enemyPieces & (1ULL << to)) ? DetectCapture(to) : -1;
+            int captured = DetectCapture(to);
             moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
             moves &= moves - 1; // remove LSB
         }
@@ -195,15 +195,13 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces,int piece) {
         for (int d = 0; d < 4; d++) {
             int to = from;
             while (1) {
-                // move one square in direction
-                to += directions[d];
+                to += directions[d];                                                            // move one square in direction
 
                 if ((directions[d] == 1 || directions[d] == -1) && (to / 8 != from / 8)) break; // horizontal wrapping
                 if (to < 0 || to > 63) break;                                                   // vertical edges
                 if (ownPieces & (1ULL << to)) break;                                            // if rook is blocked by own piece, stop sliding
 
-                // Detect captures
-                int captured = DetectCapture(to);
+                int captured = DetectCapture(to);                                               // detect captures
                 moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
 
                 if (enemyPieces & (1ULL << to)) break;                                          // stop sliding after capturing
@@ -228,18 +226,18 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece)
                 int prev = to;
                 to += directions[d];  
 
-                if (to < 0 || to > 63) break;                // stop if off board or file wrapped
+                if (to < 0 || to > 63) break;                                              // stop if off board or file wrapped
 
                 int prevFile = prev % 8;
                 int currFile = to % 8;
 
-                if (abs(currFile - prevFile) != 1) break;    // prevent wrapping, difference in file should always be 1
-                if (ownPieces & (1ULL << to)) break;         // stop if blocked by friendly piece
+                if (abs(currFile - prevFile) != 1) break;                                  // prevent wrapping, difference in file should always be 1
+                if (ownPieces & (1ULL << to)) break;                                       // stop if blocked by friendly piece
 
-                int captured = DetectCapture(to);            // Detect Captures
+                int captured = DetectCapture(to);                                          // Detect Captures
                 moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};  // add to move list
         
-                if (enemyPieces & (1ULL << to)) break;       // stop sliding after capture
+                if (enemyPieces & (1ULL << to)) break;                                     // stop sliding after capture
             }
         }
         bishopsCopy &= bishopsCopy - 1;
@@ -363,9 +361,14 @@ void PrintMoveList(){
     }
 }
 
-int main(){
+// Initialize precomputed move table
+void InitTables(){
     InitKnightMoves();
     InitKingMoves();
+}
+
+int main(){
+    InitTables();
     ParseFEN(starting_position); 
     for(int i = 0 ; i <=5;i++){
         U64 nodes = Perft(i);

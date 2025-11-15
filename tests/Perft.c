@@ -18,7 +18,7 @@ U64 Perft(int depth){
 
     for (int i = 0; i < moveCount; i++) {
         MakeMove(i);
-        if (IsInCheck() == 0){
+        if (!IsInCheck()){
             nodes += Perft(depth - 1);
         }
         UndoMove(i);

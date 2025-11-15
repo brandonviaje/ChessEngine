@@ -2,6 +2,7 @@
 #define MOVEGEN_H
 #include "Masks.h"
 #include "MyTypes.h"
+#include "Attack.h"
 #include "BitBoard.h"
 #include "../tests/Perft.h"
 
@@ -22,7 +23,8 @@ void GenerateMoves(U64 ownPieces, U64 enemyPieces, int side);
 void ResetMoveList();
 void InitKnightMoves();
 void InitKingMoves();
-int DetectCapture(int to);
+void InitTables();
+int  DetectCapture(int to);
 void AddPromotionMoves(int from, int to, int captured, int side);
 void PrintMoveList();
 
