@@ -11,7 +11,8 @@ extern U64 whitePieces;
 extern U64 occupied;
 
 // Precomputed Table
-U64 knightAttacks[64];
+U64 knightMoves[64];
+U64 kingMoves[64];
 
 // Game State
 extern int side;
@@ -25,8 +26,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
     U64 empty = ~(ownPieces | enemyPieces);
 
     // generate all single, double, and capture moves for corresponding sides
-    U64 singlePush = side == WHITE ? (pawns << 8) & empty : (pawns >> 8) & empty;
-    U64 doublePush;
+    U64 singlePush = side == WHITE ? (pawns << 8) & empty : (pawns >> 8) & empty, doublePush;
     U64 leftCapture = side == WHITE ? (pawns << 7) & enemyPieces & ~FILE_H: (pawns >> 9) & enemyPieces & ~FILE_A;
     U64 rightCapture = side == WHITE ? (pawns << 9) & enemyPieces & ~FILE_A : (pawns >> 7) & enemyPieces & ~FILE_H;
 
@@ -78,7 +78,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
         int to = __builtin_ctzll(singlePush);
         int from = side == WHITE ? to - 8 : to + 8;
 
-        // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
+        // promotion check 
         if ((side == WHITE && ((1ULL << to) & RANK_8)) || (side == BLACK && ((1ULL << to) & RANK_1))){
             AddPromotionMoves(from, to, -1, side);
         }else{
@@ -99,7 +99,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
         int from = side == WHITE ? to - 7 : to + 9;
         int captured = DetectCapture(to);
 
-        // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
+        // promotion check
         if ((side == WHITE && ((1ULL << to) & RANK_8)) || (side == BLACK && ((1ULL << to) & RANK_1))){
             AddPromotionMoves(from, to, captured, side);
         }else{
@@ -114,14 +114,14 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
         int from = side == WHITE ? to - 9 : to + 7;
         int captured = DetectCapture(to);
 
-        // promotion check : if white pawn is on rank 8 or black pawn is on rank 1, promotion is possible
+        // promotion check
         if ((side == WHITE && ((1ULL << to) & RANK_8)) || (side == BLACK && ((1ULL << to) & RANK_1))){
             AddPromotionMoves(from, to, captured, side);
         }else{
             moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // add to move list
         }
         
-        rightCapture &= rightCapture - 1; // remove LSB (done processing this piece)
+        rightCapture &= rightCapture - 1; // remove LSB 
     }
 }
 
@@ -131,7 +131,7 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece)
 
     while (knightsCopy) { 
         int from = __builtin_ctzll(knightsCopy); 
-        U64 moves = knightAttacks[from] & ~ownPieces; // remove squares blocked by own pieces 
+        U64 moves = knightMoves[from] & ~ownPieces; // remove squares blocked by own pieces 
 
         while(moves){ 
             int to = __builtin_ctzll(moves); 
@@ -144,63 +144,46 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece)
     }  
 }
 
-void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece){
-    if(!king) return;
-    // Make a copy so we don’t destroy the original bitboard
+void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece) {
+    if (!king) return;
     U64 kingsCopy = king;
 
-    while(kingsCopy){
-        // Get the king's position
+    while (kingsCopy) {
         int from = __builtin_ctzll(kingsCopy);
+        U64 moves = kingMoves[from] & ~ownPieces; // generate all moves at that square with precomputed table
 
-        // King move offsets and edge masking
-        const int offsets[8] = {9, 8, 7, 1, -1, -7, -8, -9};
-        const U64 unsafeFiles[8] = {
-            FILE_H, 0, FILE_A, FILE_H, FILE_A, FILE_H, 0, FILE_A
-        };
-        const U64 unsafeRanks[8] = {
-            RANK_8, RANK_8, RANK_8, 0, 0, RANK_1, RANK_1, RANK_1
-        };
-
-        for (int i = 0; i < 8; i++) {
-            int to = from + offsets[i];
-
-            // Skip if move goes off the board
-            if ((1ULL << from & unsafeFiles[i]) || (1ULL << from & unsafeRanks[i])) continue;            
-            if (to < 0 || to > 63) continue;
-            if (ownPieces & (1ULL << to)) continue;
-            
-            int captured = DetectCapture(to); // Detect Captures
-            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE}; // Add to move list
-        }
-        // remove LSB of kings copy
-        kingsCopy &= kingsCopy - 1;
-    }
-
-    // Castling 
-    if(piece == K){ // white king
-        int from = __builtin_ctzll(king);
-
-        // white kingside: check if castling is available by checking empty squares
-        if((castle & (1<<0)) && !(occupied & ((1ULL<<5)|(1ULL<<6))) /* squares between empty */){
-            moveList[moveCount++] = (Move){piece, from, 6, -1, -1, FLAG_CASTLE_KINGSIDE};
+        // Process quiet moves
+        while (moves) {
+            int to = __builtin_ctzll(moves);
+            int captured = (enemyPieces & (1ULL << to)) ? DetectCapture(to) : -1;
+            moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
+            moves &= moves - 1; // remove LSB
         }
 
-        // white queenside: check if castling is available by checking empty squares
-        if((castle & (1<<1)) && !(occupied & ((1ULL<<1)|(1ULL<<2)|(1ULL<<3))) ){
-            moveList[moveCount++] = (Move){piece, from, 2, -1, -1, FLAG_CASTLE_QUEENSIDE};
-        }
-    }else if(piece == k){ // black king
-        int from = __builtin_ctzll(king);
-        // black kingside: check if castling is available by checking empty squares
-        if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){
-            moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLE_KINGSIDE};
-        }
+        // Castling 
+        if(piece == K){ // white king
+            // kingside
+            if((castle & (1<<0)) && !(occupied & ((1ULL<<5)|(1ULL<<6)))){
+                moveList[moveCount++] = (Move){piece, from, 6, -1, -1, FLAG_CASTLE_KINGSIDE};
+            }
 
-        // black queenside: check if castling is available by checking empty squares
-        if((castle & (1<<3)) && !(occupied & ((1ULL<<57)|(1ULL<<58)|(1ULL<<59))) ){
-            moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLE_QUEENSIDE};
+            // queenside
+            if((castle & (1<<1)) && !(occupied & ((1ULL<<1)|(1ULL<<2)|(1ULL<<3))) ){
+                moveList[moveCount++] = (Move){piece, from, 2, -1, -1, FLAG_CASTLE_QUEENSIDE};
+            }
+
+        }else if(piece == k){ // black king
+            //kingside
+            if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){
+                moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLE_KINGSIDE};
+            }
+
+            // queenside
+            if((castle & (1<<3)) && !(occupied & ((1ULL<<57)|(1ULL<<58)|(1ULL<<59))) ){
+                moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLE_QUEENSIDE};
+            }
         }
+        kingsCopy &= kingsCopy - 1; // remove processed king
     }
 }
 
@@ -313,14 +296,13 @@ void ResetMoveList(){
     moveCount = 0;
 }
 
-void InitKnightTable(){
+void InitKnightMoves(){
 
     int df[8] = { 2, 2, -2, -2, 1, 1, -1, -1 };
     int dr[8] = { 1, -1, 1, -1, 2, -2, 2, -2 };
 
     for (int sq = 0; sq < 64; sq++) {
         U64 attacks = 0ULL;
-
         int file = sq % 8;
         int rank = sq / 8;
 
@@ -328,18 +310,32 @@ void InitKnightTable(){
             int nf = file + df[i];
             int nr = rank + dr[i];
 
-            if (nf >= 0 && nf <= 7 && nr >= 0 && nr <= 7) {
+            if (nf >= 0 && nf <= 7 && nr >= 0 && nr <= 7) { // check if file and rank are in the board
                 int nsq = nr * 8 + nf;
-
-                if(nsq > 63){
-                    break;
-                }
-
                 attacks |= (1ULL << nsq);
             }
         }
 
-        knightAttacks[sq] = attacks;
+        knightMoves[sq] = attacks;
+    }
+}
+
+void InitKingMoves() {
+    for (int square = 0; square < 64; square++) {
+        U64 bb = 1ULL << square;
+        U64 moves = 0ULL;
+
+        // Possible king moves
+        moves |= (bb << 8);                     // N
+        moves |= (bb >> 8);                     // S
+        moves |= (bb << 1) & ~FILE_A;           // E
+        moves |= (bb >> 1) & FILE_H;            // W
+        moves |= (bb << 9) & ~FILE_A;           // NE
+        moves |= (bb << 7) & ~FILE_H;           // NW
+        moves |= (bb >> 9) & ~FILE_H;           // SW
+        moves |= (bb >> 7) & ~FILE_A;           // SE
+
+        kingMoves[square] = moves;              // add possible moves at that square
     }
 }
 
@@ -386,7 +382,8 @@ void PrintMoveList(){
 }
 
 int main(){
-    InitKnightTable();
+    InitKnightMoves();
+    InitKingMoves();
     ParseFEN(starting_position); 
     for(int i = 0 ; i <=5;i++){
         U64 nodes = Perft(i);
