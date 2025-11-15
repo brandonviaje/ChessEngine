@@ -25,7 +25,7 @@ int IsInCheck() {
     U64 enemyPieces = (side == WHITE ? blackPieces : whitePieces);
     U64 ownPieces   = (side == WHITE ? whitePieces : blackPieces);
 
-    GeneratePseudoLegalMoves(enemyPieces, ownPieces, side ^ 1);
+    GenerateMoves(enemyPieces, ownPieces, side ^ 1);
 
     // Scan moves to see if any attack king square
     for (int i = 0; i < moveCount; i++) {

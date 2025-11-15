@@ -14,7 +14,7 @@ U64 Perft(int depth){
     if (depth == 0) 
         return 1ULL;
 
-    GeneratePseudoLegalMoves(side == WHITE ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
+    GenerateMoves(side == WHITE ? whitePieces : blackPieces, side == WHITE ? blackPieces : whitePieces, side);
 
     for (int i = 0; i < moveCount; i++) {
         MakeMove(i);
