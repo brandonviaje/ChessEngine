@@ -340,17 +340,18 @@ void InitKingMoves() {
 }
 
 int DetectCapture(int to) {
-    // -1 If no capture
-    int captured = -1;
-    
-    // Detect Captures on the Enemy side bitboards
-    for (int i = (side == WHITE ? 6 : 0); i < (side == WHITE ? 12 : 6); i++){
-        if (bitboards[i] & (1ULL << to)){
-            captured = i;
-            break;
-        }
+    // white side: start at black piece bb black side: start at white piece bb
+    int start = (side == WHITE) ? 6 : 0;
+    int end   = (side == WHITE) ? 12 : 6;
+
+    U64 target = 1ULL << to;
+
+    for (int i = start; i < end; i++) {
+        if (bitboards[i] & target)
+            return i; // captured piece index
     }
-    return captured;
+
+    return -1; // no capture
 }
 
 // Add promotion moves for pawns
