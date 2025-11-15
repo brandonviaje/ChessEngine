@@ -324,73 +324,48 @@ void UndoMove(int index) {
 
     switch (moveFlag) {
         case FLAG_CASTLE_KINGSIDE: {
-            // move king back
-            MovePiece(piece, toMask, fromMask);
-
+            MovePiece(piece, toMask, fromMask);  // move king back
             U64 fromRook, toRook;
-            if (prevSide == WHITE) { // undoing White's move
+
+            if (prevSide == WHITE) {            // undoing White's move
                 fromRook = 1ULL << 7;           // h1 rook
                 toRook = 1ULL << (to - 1);      // f1
-                bitboards[R] &= ~toRook;
-                bitboards[R] |= fromRook;
-                whitePieces &= ~toRook;
-                whitePieces |= fromRook;
+                MovePiece(R, toRook, fromRook);
             } else { // undoing Black's move
                 fromRook = 1ULL << 63;          // h8 rook
                 toRook = 1ULL << (to - 1);      // f8
-                bitboards[r] &= ~toRook;
-                bitboards[r] |= fromRook;
-                blackPieces &= ~toRook;
-                blackPieces |= fromRook;
+                MovePiece(r, toRook, fromRook);
             }
-
-            // Update occupied
-            occupied &= ~toRook;
-            occupied |= fromRook;
             break;
         }
 
         case FLAG_CASTLE_QUEENSIDE: {
-            // Move king back
-            MovePiece(piece, toMask, fromMask);
-
+            MovePiece(piece, toMask, fromMask);  // Move king back
             U64 fromRook, toRook;
-            if (prevSide == WHITE) { // undoing White's move
-                fromRook = 1ULL << 0;           // a1 rook
-                toRook = 1ULL << (to + 1); // d1
-                bitboards[R] &= ~toRook;
-                bitboards[R] |= fromRook;
-                whitePieces &= ~toRook;
-                whitePieces |= fromRook;
+
+            if (prevSide == WHITE) {             // undoing White's move
+                fromRook = 1ULL << 0;            // a1 rook
+                toRook = 1ULL << (to + 1);       // d1
+                MovePiece(R, toRook, fromRook);
             } else { // undoing Black's move
                 fromRook = 1ULL << 56;           // a8 rook
-                toRook = 1ULL << (to + 1); // d8
-                bitboards[r] &= ~toRook;
-                bitboards[r] |= fromRook;
-                blackPieces  &= ~toRook;
-                blackPieces  |= fromRook;
+                toRook = 1ULL << (to + 1);       // d8
+                MovePiece(r, toRook, fromRook);
             }
-
-            // Update occupied
-            occupied &= ~toRook;
-            occupied |= fromRook;
             break;
         }
 
         case FLAG_ENPASSANT: {
-            // Move pawn back
-            MovePiece(piece, toMask, fromMask);
-            int capturedSquare = prevSide == WHITE ? to - 8 : to + 8; // opposite side
+            MovePiece(piece, toMask, fromMask);                       // Move pawn back
+            int capturedSquare = prevSide == WHITE ? to - 8 : to + 8; // get captured square
             U64 capturedMask = 1ULL << capturedSquare;
-
             RestorePiece(captured, capturedMask);                     // restore captured piece
             break;
         }
 
         case FLAG_PROMOTION: {
-            // remove promoted piece
-            bitboards[promotedPiece] &= ~toMask;
-            bitboards[piece] |= fromMask; // restore pawn
+            bitboards[promotedPiece] &= ~toMask;                      // remove promoted piece
+            bitboards[piece] |= fromMask;                             // restore pawn
 
             if (piece <= K){
                 whitePieces &= ~toMask;
@@ -400,20 +375,13 @@ void UndoMove(int index) {
                 blackPieces |= fromMask;
             }
 
-            // restore captured piece
-            if (captured != -1) {
-                bitboards[captured] |= toMask;
-                if (captured <= K) whitePieces |= toMask;
-                else blackPieces |= toMask;
-            }
-
-            if (captured != -1) occupied |= toMask;
+            if (captured != -1) RestorePiece(captured,toMask);       // restore captured piece
             break;
         }
 
         default: {
-            MovePiece(piece, toMask, fromMask);                // move piece back 
-            if (captured != -1) RestorePiece(captured,toMask); // restore captured piece 
+            MovePiece(piece, toMask, fromMask);                      // move piece back 
+            if (captured != -1) RestorePiece(captured,toMask);       // restore captured piece 
             break;
         }
     }
@@ -422,9 +390,10 @@ void UndoMove(int index) {
 
 // Move a piece from one square to another
 void MovePiece(int piece, U64 fromMask, U64 toMask) {
-    bitboards[piece] &= ~fromMask;  // remove from old square
-    bitboards[piece] |= toMask;     // set on new square
-
+    bitboards[piece] &= ~fromMask;  // clear piece from old square
+    bitboards[piece] |= toMask;     // set to new square
+    
+    // set corresponding bitboards
     if (piece <= K) { // white piece
         whitePieces &= ~fromMask;
         whitePieces |= toMask;
@@ -440,7 +409,7 @@ void MovePiece(int piece, U64 fromMask, U64 toMask) {
 // Restore a piece to a square 
 void RestorePiece(int piece, U64 mask) {
     bitboards[piece] |= mask;                  // set bitboard using that mask
-    
+
     // set corresponding bitboards
     if (piece <= K) whitePieces |= mask;       
     else blackPieces |= mask;
