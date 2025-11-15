@@ -2,8 +2,6 @@
 
 ## About The Project
 
-[![Chess Engine Screenshot][product-screenshot]](https://example.com)
-
 This is a chess engine written in C. The goal of this project is to implement a fully functional engine from scratch, focusing on efficient move generation, board representation, and search algorithms.  
 
 Key points:
