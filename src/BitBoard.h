@@ -25,5 +25,7 @@ void PrintGameState();
 void ParseFEN(char * FEN);
 void MakeMove(int index);
 void UndoMove(int index);
+void MovePiece(int piece, U64 fromMask, U64 toMask);
+void RestorePiece(int piece, U64 mask);
 
 #endif
