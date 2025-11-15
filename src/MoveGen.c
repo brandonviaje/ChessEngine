@@ -162,24 +162,20 @@ void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece) {
 
         // Castling 
         if(piece == K){ // white king
-            // kingside
-            if((castle & (1<<0)) && !(occupied & ((1ULL<<5)|(1ULL<<6)))){
+            if((castle & (1<<0)) && !(occupied & ((1ULL<<5)|(1ULL<<6)))){ // kingside
                 moveList[moveCount++] = (Move){piece, from, 6, -1, -1, FLAG_CASTLE_KINGSIDE};
             }
-
-            // queenside
-            if((castle & (1<<1)) && !(occupied & ((1ULL<<1)|(1ULL<<2)|(1ULL<<3))) ){
+            
+            if((castle & (1<<1)) && !(occupied & ((1ULL<<1)|(1ULL<<2)|(1ULL<<3))) ){ // queenside
                 moveList[moveCount++] = (Move){piece, from, 2, -1, -1, FLAG_CASTLE_QUEENSIDE};
             }
 
         }else if(piece == k){ // black king
-            //kingside
-            if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){
+            if((castle & (1<<2)) && !(occupied & ((1ULL<<61)|(1ULL<<62))) ){ //kingside
                 moveList[moveCount++] = (Move){piece, from, 62, -1, -1, FLAG_CASTLE_KINGSIDE};
             }
 
-            // queenside
-            if((castle & (1<<3)) && !(occupied & ((1ULL<<57)|(1ULL<<58)|(1ULL<<59))) ){
+            if((castle & (1<<3)) && !(occupied & ((1ULL<<57)|(1ULL<<58)|(1ULL<<59))) ){ // queenside
                 moveList[moveCount++] = (Move){piece, from, 58, -1, -1, FLAG_CASTLE_QUEENSIDE};
             }
         }
@@ -202,23 +198,15 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces,int piece) {
                 // move one square in direction
                 to += directions[d];
 
-                // horizontal wrapping
-                if ((directions[d] == 1 || directions[d] == -1) && (to / 8 != from / 8)) break;
-
-                // vertical edges
-                if (to < 0 || to > 63) break;
-
-                // if rook is blocked by own piece, stop sliding
-                if (ownPieces & (1ULL << to)) break;  
+                if ((directions[d] == 1 || directions[d] == -1) && (to / 8 != from / 8)) break; // horizontal wrapping
+                if (to < 0 || to > 63) break;                                                   // vertical edges
+                if (ownPieces & (1ULL << to)) break;                                            // if rook is blocked by own piece, stop sliding
 
                 // Detect captures
                 int captured = DetectCapture(to);
-
-                // Add to move list
                 moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
 
-                // stop sliding after capturing
-                if (enemyPieces & (1ULL << to)) break;
+                if (enemyPieces & (1ULL << to)) break;                                          // stop sliding after capturing
             }
         }
         rooksCopy &= rooksCopy - 1;          
@@ -240,25 +228,18 @@ void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece)
                 int prev = to;
                 to += directions[d];  
 
-                // stop if off board or file wrapped
-                if (to < 0 || to > 63) break;
+                if (to < 0 || to > 63) break;                // stop if off board or file wrapped
 
                 int prevFile = prev % 8;
                 int currFile = to % 8;
 
-                if (abs(currFile - prevFile) != 1) break;
+                if (abs(currFile - prevFile) != 1) break;    // prevent wrapping, difference in file should always be 1
+                if (ownPieces & (1ULL << to)) break;         // stop if blocked by friendly piece
 
-                // stop if blocked by friendly piece
-                if (ownPieces & (1ULL << to)) break;
-
-                // Detect Captures
-                int captured = DetectCapture(to);
-
-                // Add to move list
-                moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};
-
-                // stop sliding after capture
-                if (enemyPieces & (1ULL << to)) break;
+                int captured = DetectCapture(to);            // Detect Captures
+                moveList[moveCount++] = (Move){piece, from, to, -1, captured, FLAG_NONE};  // add to move list
+        
+                if (enemyPieces & (1ULL << to)) break;       // stop sliding after capture
             }
         }
         bishopsCopy &= bishopsCopy - 1;
