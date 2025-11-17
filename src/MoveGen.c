@@ -1,4 +1,4 @@
-#include "MoveGen.h"
+#include "../include/MoveGen.h"
 
 // Global variables
 Move moveList[256]; 
@@ -370,9 +370,5 @@ void InitTables(){
 int main(){
     InitTables();
     ParseFEN(starting_position); 
-    for(int i = 0 ; i <=5;i++){
-        U64 nodes = Perft(i);
-        printf("Nodes at depth %d: %llu \n", i, nodes);
-    }
     return 0;
 }

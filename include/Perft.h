@@ -1,10 +1,10 @@
 #ifndef PERFT_H
 #define PERFT_H
 
-#include "../src/BitBoard.h"
-#include "../src/Attack.h"
-#include "../src/MoveGen.h"
-#include "../src/MyTypes.h"
+#include "BitBoard.h"
+#include "Attack.h"
+#include "MoveGen.h"
+#include "MyTypes.h"
 
 extern Move moveList[256]; 
 extern int moveCount;
@@ -13,5 +13,4 @@ extern U64 blackPieces;
 extern int side; 
 
 U64 Perft(int depth);
-
 #endif

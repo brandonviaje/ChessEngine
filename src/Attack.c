@@ -1,4 +1,4 @@
-#include "Attack.h"
+#include "../include/Attack.h"
 
 //BitBoards
 extern U64 bitboards[12];
@@ -70,24 +70,24 @@ int IsAttackSquare(int side, int square) {
     // Bishop and Queen attacks 
     int bishopDirs[4] = { 9, -9, 7, -7 }; 
     for (int i = 0; i < 4; i++) {
-        int to = square + bishopDirs[i];
+        int to = square;
+        while (1) {
+            int prev = to;
+            to += bishopDirs[i];
 
-        while (to >= 0 && to < 64) {
-            int prevFile = (to - bishopDirs[i]) & 7;    // previous file
-            int currFile = to & 7;                      // current file
+            if (to < 0 || to > 63) break;
 
-            if (abs(currFile - prevFile) != 1) break;   // prevent diagonal wrap
+            int prevFile = prev % 8;                  // previous file
+            int currFile = to % 8;                    // current file
+            if (abs(currFile - prevFile) != 1) break; // prevent diagonal wrap
 
             U64 mask = 1ULL << to;
 
-            // Stop at first blocking piece
             if (occupied & mask) {
-                if (enemyBishops & mask) return 1;      // target attacked by enemy bishop
-                if (enemyQueens  & mask) return 1;      // target attacked by enemy queen
-                break; // blocked
+                if (enemyBishops & mask) return 1;
+                if (enemyQueens  & mask) return 1;
+                break;
             }
-
-            to += bishopDirs[i];                        // continue sliding along diagonal
         }
     }
 

@@ -4,7 +4,7 @@
 #include "MyTypes.h"
 #include "Attack.h"
 #include "BitBoard.h"
-#include "../tests/Perft.h"
+#include "Perft.h"
 
 extern Move moveList[256];
 extern int moveCount;

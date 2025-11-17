@@ -1,6 +1,3 @@
 .vscode/
 chess_engine
-src/BitBoard.o 
-src/MoveGen.o
-src/Attack.o
-tests/Perft.o
+build/

@@ -4,35 +4,39 @@ CC = gcc
 # Compiler flags
 CFLAGS = -g -Wall
 
-# Source and Include directories
+# Directories
 SRC_DIR = src
 TEST_DIR = tests
-INCLUDE_DIR = src
+BUILD_DIR = build
 
 # Source files
-SRCS = $(SRC_DIR)/BitBoard.c $(SRC_DIR)/MoveGen.c $(SRC_DIR)/Attack.c $(TEST_DIR)/Perft.c
+SRCS = $(SRC_DIR)/BitBoard.c \
+       $(SRC_DIR)/MoveGen.c \
+       $(SRC_DIR)/Attack.c \
+       $(TEST_DIR)/Perft.c
 
-# Object files
-OBJS = $(SRCS:.c=.o)
+# Object files placed under build
+OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
 
 # Output executable
 TARGET = chess_engine
 
-# Default target
 all: $(TARGET)
 
-# Build target
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
-# Compile
-%.o: %.c
-	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+# Compile *.c → build/*.o
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Run program
+# Ensure build exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+clean:
+	rm -rf $(BUILD_DIR) $(TARGET)
+
 run: $(TARGET)
 	./$(TARGET)
-
-# Clean build files
-clean:
-	rm -f $(TARGET) $(OBJS)
