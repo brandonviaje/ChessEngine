@@ -1,7 +1,7 @@
 #include "../include/MoveGen.h"
 
 // Global variables
-Move moveList[256]; 
+Move moveList[MAX_MOVES]; 
 int moveCount = 0;
 
 //BitBoards
@@ -13,6 +13,7 @@ extern U64 occupied;
 // Precomputed Table
 U64 knightMoves[64];
 U64 kingMoves[64];
+U64 pawnAttacks[2][64];             // 0 white // 1 black
 
 // Game State
 extern int side;
@@ -23,9 +24,9 @@ extern int fullmove;
 
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece){
     if(!pawns) return;
-    U64 empty = ~(ownPieces | enemyPieces);
+    U64 empty = ~occupied;
 
-    // generate all single, double, and capture moves for corresponding sides
+    // generate pushes and captures for corresponding sides
     U64 singlePush = side == WHITE ? (pawns << 8) & empty : (pawns >> 8) & empty, doublePush;
     U64 leftCapture = side == WHITE ? (pawns << 7) & enemyPieces & ~FILE_H: (pawns >> 9) & enemyPieces & ~FILE_A;
     U64 rightCapture = side == WHITE ? (pawns << 9) & enemyPieces & ~FILE_A : (pawns >> 7) & enemyPieces & ~FILE_H;
@@ -46,11 +47,11 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
         U64 epLeft, epRight;
 
         if (side == WHITE) {
-            epLeft  = (pawns << 7) & epSquare & ~FILE_A; // left capture
-            epRight = (pawns << 9) & epSquare & ~FILE_H; // right capture
+            epLeft  = (pawns << 7) & epSquare & ~FILE_A & empty; // left capture
+            epRight = (pawns << 9) & epSquare & ~FILE_H & empty; // right capture
         } else {
-            epLeft  = (pawns >> 9) & epSquare & ~FILE_A; // left capture
-            epRight = (pawns >> 7) & epSquare & ~FILE_H; // right capture
+            epLeft  = (pawns >> 9) & epSquare & ~FILE_A & empty; // left capture
+            epRight = (pawns >> 7) & epSquare & ~FILE_H & empty; // right capture
         }
 
         // Process EP captures
@@ -261,11 +262,11 @@ void GenerateMovesInternal(U64 Pawn, U64 Knight, U64 Bishop, U64 Rook, U64 Queen
     GenerateKingMoves(King, ownPieces, enemyPieces, side == WHITE ? K : k);
 }
 
-void GenerateMoves(U64 ownPieces, U64 enemyPieces, int side) {
+void GenerateMoves() {
     if (side == WHITE) {  // white
-        GenerateMovesInternal(bitboards[P], bitboards[N], bitboards[B], bitboards[R], bitboards[Q], bitboards[K],ownPieces, enemyPieces, side);
-    } else {  // black
-        GenerateMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k],ownPieces, enemyPieces, side);
+        GenerateMovesInternal(bitboards[P], bitboards[N], bitboards[B], bitboards[R], bitboards[Q], bitboards[K], whitePieces, blackPieces, side);
+    } else {              // black
+        GenerateMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k], blackPieces, whitePieces, side);
     }
 }
 
@@ -369,6 +370,7 @@ void InitTables(){
 
 int main(){
     InitTables();
-    ParseFEN(starting_position); 
+    ParseFEN(kiwipete); 
+    PrintBitboard(occupied);
     return 0;
 }

@@ -63,25 +63,16 @@ void SetPiece(int piece, int square) {
 }
 
 void PrintBitboard(U64 board) {
-    printf("\n");
     // Print ranks from 8 to 1
-    for (int rank = 7; rank >= 0; rank--) {
-        printf("%d  ", rank + 1); // Rank label on the left
+    for (int rank = 0; rank < 8; rank++) {
+        printf("%d  ", 8 - rank); // Rank label on the left
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
-            if (board & (1ULL << square))
-                printf("1 ");
-            else
-                printf(". ");
+            printf(" %c", GetBit(board,square) ? '1' : '.');
         }
-        printf("\n");
+        printf("\n");  
     }
-
-    // Print file labels at the bottom
-    printf("\n   ");
-    for (int file = 0; file < 8; file++)
-        printf("%c ", 'a' + file);
-    printf("\n\n");
+    printf("\n    a b c d e f g h\n");
 }
 
 // Parse FEN String to capture the current game state

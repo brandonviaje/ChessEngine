@@ -20,18 +20,22 @@
 #define en_passant "8/8/8/3pP3/8/8/8/8 w - d6 0 1"
 #define pawn_promotion "8/4P3/8/8/8/8/4p3/8 w - - 0 1"
 #define castling_position "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"
-#define kiwipete "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -"
+#define kiwipete "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 
 // Color & Move Types
-#define MAX_MOVES      256
-#define MAX_DEPTH 64
-#define FLAG_NONE        0
-#define FLAG_ENPASSANT   1
+#define MAX_MOVES           256
+#define FLAG_NONE             0
+#define FLAG_ENPASSANT        1
 #define FLAG_CASTLE_KINGSIDE  2
 #define FLAG_CASTLE_QUEENSIDE 3
-#define FLAG_PROMOTION   4
-#define WHITE            0
-#define BLACK            1
+#define FLAG_PROMOTION        4
+#define WHITE                 0
+#define BLACK                 1
+
+// Macros
+#define GetBit(board,square) (board & (1ULL << square))
+#define SetBit(board,square) (board |= (1ULL << square))
+#define PopBit(board,square) (board ^= (1ULL << square))
 
 // Typedef
 typedef unsigned long long U64;
@@ -42,12 +46,12 @@ typedef enum {
 } Pieces;
 
 typedef struct{
-    int piece;
-    int from;    // square index the piece moves from
-    int to;      // square index the piece moves to
-    int promotion;
-    int captured;
-    int flags; // handles special moves
+    int piece;      // piece type of bitboard
+    int from;       // square index the piece moves from
+    int to;         // square index the piece moves to
+    int promotion;  // piece type of promotted piece 
+    int captured;   // piece type of captured piece
+    int flags;      // handles special moves
 } Move;
 
 #endif

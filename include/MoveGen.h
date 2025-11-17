@@ -19,7 +19,7 @@ void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateBishopMoves(U64 bishops, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side);
-void GenerateMoves(U64 ownPieces, U64 enemyPieces, int side);
+void GenerateMoves();
 void ResetMoveList();
 void InitKnightMoves();
 void InitKingMoves();

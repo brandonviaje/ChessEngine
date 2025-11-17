@@ -28,11 +28,11 @@ int IsAttackSquare(int side, int square) {
 
     // Pawn attacks
     if (enemy == WHITE) {
-        if (((enemyPawns << 7) & ~FILE_H) & target) return 1;  // pawn attacks from SW to NE
-        if (((enemyPawns << 9) & ~FILE_A) & target) return 1;  // pawn attacks from SE to NW
+        if (((enemyPawns << 7) & ~FILE_H) & target) return 1;   // pawn attacks from SW to NE
+        if (((enemyPawns << 9) & ~FILE_A) & target) return 1;   // pawn attacks from SE to NW
     } else {
-        if (((enemyPawns >> 7) & ~FILE_H) & target) return 1;  // pawn attacks from NW to SE
-        if (((enemyPawns >> 9) & ~FILE_A) & target) return 1;  // pawn attacks from NE to SW
+        if (((enemyPawns >> 7) & ~FILE_H) & target) return 1;   // pawn attacks from NW to SE
+        if (((enemyPawns >> 9) & ~FILE_A) & target) return 1;   // pawn attacks from NE to SW
     }
 
     // Knight attacks

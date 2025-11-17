@@ -13,4 +13,5 @@ extern U64 blackPieces;
 extern int side; 
 
 U64 Perft(int depth);
+void PerftDivide(int depth);
 #endif

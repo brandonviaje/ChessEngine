@@ -10,11 +10,11 @@ extern U64 blackPieces;
 extern U64 occupied;
 
 // Game state
-extern int side;          // 0 = white, 1 = black
-extern int enpassant;     // en passant square
-extern unsigned char castle; // castling rights
-extern int halfmove;      // halfmove clock
-extern int fullmove;      // fullmove number
+extern int side;                // 0 = white, 1 = black
+extern int enpassant;           // en passant square
+extern unsigned char castle;    // castling rights
+extern int halfmove;            // halfmove clock
+extern int fullmove;            // fullmove number
 
 // Function Prototypes
 void ResetBoardState();
@@ -28,4 +28,4 @@ void UndoMove(int index);
 void MovePiece(int piece, U64 fromMask, U64 toMask);
 void RestorePiece(int piece, U64 mask);
 
-#endif
+#endif 
