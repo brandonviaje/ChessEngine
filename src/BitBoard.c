@@ -64,8 +64,8 @@ void SetPiece(int piece, int square) {
 
 void PrintBitboard(U64 board) {
     // Print ranks from 8 to 1
-    for (int rank = 0; rank < 8; rank++) {
-        printf("%d  ", 8 - rank); // Rank label on the left
+    for (int rank = 7; rank >= 0; rank--) {
+        printf("%d  ", rank + 1); // Rank label on the left
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
             printf(" %c", GetBit(board,square) ? '1' : '.');
