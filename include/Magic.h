@@ -8,11 +8,18 @@
 
 extern U64 attackTable[];
 
-struct SMagic{
+U64 GenerateRookAttacks(int square);
+U64 GenerateBishopAttacks(int square);
+U64 GenerateQueenAttacks(int square);
+U64 GetMagicNumber();
+U64 RookMask(int square);
+U64 BishopMask(int square);
+
+typedef struct {
     U64 * ptr;
     U64 mask;
     U64 magic;
     int shift;
-};
+} SMagic;
 
 #endif

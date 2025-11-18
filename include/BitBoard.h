@@ -2,6 +2,7 @@
 #define BITBOARD_H
 #include "MyTypes.h"
 #include "MoveGen.h"
+#include "Attack.h"
 
 // Piece bitboards
 extern U64 bitboards[12];
@@ -27,10 +28,5 @@ void MakeMove(int index);
 void UndoMove(int index);
 void MovePiece(int piece, U64 fromMask, U64 toMask);
 void RestorePiece(int piece, U64 mask);
-
-typedef enum {
-    P, N, B, R, Q, K,   // white
-    p, n, b, r, q, k    // black
-} Pieces;
 
 #endif 

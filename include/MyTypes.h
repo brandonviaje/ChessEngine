@@ -35,9 +35,23 @@
 // Macros
 #define GetBit(board,square) (board & (1ULL << square))
 #define SetBit(board,square) (board |= (1ULL << square))
-#define PopBit(board,square) (board ^= (1ULL << square))
+#define PopBit(board,square) (board &= ~(1ULL << square))
 
 // Typedef
 typedef unsigned long long U64;
+
+typedef struct{
+    int piece;      // piece type of bitboard
+    int from;       // square index the piece moves from
+    int to;         // square index the piece moves to
+    int promotion;  // piece type of promotted piece 
+    int captured;   // piece type of captured piece
+    int flags;      // handles special moves
+} Move;
+
+typedef enum {
+    P, N, B, R, Q, K,   // white
+    p, n, b, r, q, k    // black
+} Pieces;
 
 #endif

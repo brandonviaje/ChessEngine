@@ -53,13 +53,13 @@ int CharToPiece(char c){
 
 // Set Piece on square
 void SetPiece(int piece, int square) {
-    bitboards[piece] |= 1ULL << square;      
+    SetBit(bitboards[piece],square);    
 
     // update white or black bitboard
-    if (piece <= K) whitePieces |= 1ULL << square;
-    else  blackPieces |= 1ULL << square;
+    if (piece <= K) SetBit(whitePieces,square);
+    else  SetBit(blackPieces,square);
 
-    occupied |= 1ULL << square; // update occupied bitboard
+    SetBit(occupied,square);    // update occupied bitboard
 }
 
 void PrintBitboard(U64 board) {

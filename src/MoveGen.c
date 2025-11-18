@@ -112,6 +112,5 @@ void PrintMoveList(){
 }
 
 int main(){
-    PrintBitboard(RANK_8);
     return 0;
 }
