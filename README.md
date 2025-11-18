@@ -66,6 +66,7 @@ Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/b
 
 * [Alpha-Beta Pruning](https://cs.stanford.edu/people/eroberts/courses/soco/projects/2003-04/intelligent-search/alphabeta.html)
 * [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
+* [Magic Bitboards](https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks#Magic_Bitboards)
 * [Minimax Algorithm](https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence/)
 * [Move Generation with Bitboards](https://libres.uncg.edu/ir/asu/f/Columbia_Sophie_Spring%202023_thesis.pdf)
 * [Perft Testing Forum](https://talkchess.com/viewtopic.php?t=80952)
