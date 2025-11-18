@@ -28,4 +28,9 @@ void UndoMove(int index);
 void MovePiece(int piece, U64 fromMask, U64 toMask);
 void RestorePiece(int piece, U64 mask);
 
+typedef enum {
+    P, N, B, R, Q, K,   // white
+    p, n, b, r, q, k    // black
+} Pieces;
+
 #endif 

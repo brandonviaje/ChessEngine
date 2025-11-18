@@ -40,18 +40,4 @@
 // Typedef
 typedef unsigned long long U64;
 
-typedef enum {
-    P, N, B, R, Q, K,   // white
-    p, n, b, r, q, k    // black
-} Pieces;
-
-typedef struct{
-    int piece;      // piece type of bitboard
-    int from;       // square index the piece moves from
-    int to;         // square index the piece moves to
-    int promotion;  // piece type of promotted piece 
-    int captured;   // piece type of captured piece
-    int flags;      // handles special moves
-} Move;
-
 #endif
