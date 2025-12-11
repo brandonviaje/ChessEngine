@@ -112,5 +112,24 @@ void PrintMoveList(){
 }
 
 int main(){
+    InitMagicBitBoards();
+    
+    // Clear occupied first
+    occupied = 0ULL;
+    SetBit(occupied,25);    // piece on b4, should stop on b4 then
+
+    printf("Bishop attacks from d4:\n");
+    U64 bishopAttacksBB = GenerateBishopAttacks(27);
+    PrintBitBoard(bishopAttacksBB);
+
+    printf("Rook attacks from d4:\n");
+    U64 rookAttacksBB = GenerateRookAttacks(27);
+    PrintBitBoard(rookAttacksBB);
+
+    printf("Queen attacks from d4:\n");
+    U64 queenAttacksBB = GenerateQueenAttacks(27);
+    PrintBitBoard(queenAttacksBB);
+
+    CleanupMagicBitboards();
     return 0;
 }

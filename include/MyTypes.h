@@ -33,9 +33,10 @@
 #define BLACK                 1
 
 // Macros
-#define GetBit(board,square) (board & (1ULL << square))
-#define SetBit(board,square) (board |= (1ULL << square))
-#define PopBit(board,square) (board &= ~(1ULL << square))
+#define SetBit(board,square) ((board) |= (1ULL << (square)))
+#define GetBit(board,square) ((board) & (1ULL << (square)))
+#define PopBit(board,square) ((board) &= ~(1ULL << (square)))
+
 
 // Typedef
 typedef unsigned long long U64;

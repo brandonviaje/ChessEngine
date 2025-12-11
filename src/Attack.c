@@ -9,6 +9,11 @@ U64 knightAttacks[64];
 U64 kingAttacks[64];
 U64 pawnAttacks[2][64];             // 0 white // 1 black
 
+extern U64* attackTable;
+extern SMagic bishopAttacks[64];
+extern SMagic rookAttacks[64];
+extern U64 occupied;
+
 // Game State
 extern int side;
 
@@ -93,6 +98,91 @@ U64 GenerateKingAttacks(int square) {
     attacks |= (bitboard >> 7) & ~FILE_A;           // SE
 
     return attacks;
+}
+
+U64 GenerateBishopAttacks(int square) {
+    U64* atkptr = bishopAttacks[square].ptr;
+    U64 blockers = occupied & bishopAttacks[square].mask;
+    U64 index = (blockers * bishopAttacks[square].magic) >> bishopAttacks[square].shift;
+    U64 attacks = atkptr[index];
+
+    int rank = square / 8;
+    int file = square % 8;
+
+    // add edge squares dynamically
+
+    // Up-Right
+    for(int r=rank+1, f=file+1; r<=7 && f<=7; r++, f++) {
+        int sq = r*8 + f;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+    // Up-Left
+    for(int r=rank+1, f=file-1; r<=7 && f>=0; r++, f--) {
+        int sq = r*8 + f;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+    // Down-Right
+    for(int r=rank-1, f=file+1; r>=0 && f<=7; r--, f++) {
+        int sq = r*8 + f;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+    // Down-Left
+    for(int r=rank-1, f=file-1; r>=0 && f>=0; r--, f--) {
+        int sq = r*8 + f;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+
+    return attacks;
+}
+
+U64 GenerateRookAttacks(int square) {
+    U64* atkptr = rookAttacks[square].ptr;
+    U64 blockers = occupied & rookAttacks[square].mask;
+    U64 index = (blockers * rookAttacks[square].magic) >> rookAttacks[square].shift;
+    U64 attacks = atkptr[index];
+
+    int rank = square / 8;
+    int file = square % 8;
+
+    // add edge squares dynamically
+
+    // Up
+    for(int r=rank+1; r<=7; r++) {
+        int sq = r*8 + file;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+
+    // Down
+    for(int r=rank-1; r>=0; r--) {
+        int sq = r*8 + file;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+
+    // Right
+    for(int f=file+1; f<=7; f++) {
+        int sq = rank*8 + f;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+
+    // Left
+    for(int f=file-1; f>=0; f--) {
+        int sq = rank*8 + f;
+        attacks |= 1ULL << sq;
+        if(GetBit(occupied, sq)) break;
+    }
+
+    return attacks;
+}
+
+U64 GenerateQueenAttacks(int square){
+    return GenerateBishopAttacks(square) | GenerateRookAttacks(square);
 }
 
 // Initialize precomputed attack tables

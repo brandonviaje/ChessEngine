@@ -13,6 +13,7 @@ BUILD_DIR = build
 SRCS = $(SRC_DIR)/BitBoard.c \
        $(SRC_DIR)/MoveGen.c \
        $(SRC_DIR)/Attack.c \
+       $(SRC_DIR)/Magic.c \
        $(TEST_DIR)/Perft.c
 
 # Object files placed under build

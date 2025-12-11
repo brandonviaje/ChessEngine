@@ -62,7 +62,7 @@ void SetPiece(int piece, int square) {
     SetBit(occupied,square);    // update occupied bitboard
 }
 
-void PrintBitboard(U64 board) {
+void PrintBitBoard(U64 board) {
     // Print ranks from 8 to 1
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d  ", rank + 1); // Rank label on the left
