@@ -65,6 +65,7 @@ Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/b
 ## Acknowledgments
 
 * [Alpha-Beta Pruning](https://cs.stanford.edu/people/eroberts/courses/soco/projects/2003-04/intelligent-search/alphabeta.html)
+* [Best Magics So Far](https://www.chessprogramming.org/Best_Magics_so_far)
 * [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
 * [Magic Bitboards](https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks#Magic_Bitboards)
 * [Minimax Algorithm](https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence/)
