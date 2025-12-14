@@ -25,19 +25,19 @@ TARGET = chess_engine
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
+	@$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
 # Compile *.c → build/*.o
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 # Ensure build exists
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+	@rm -rf $(BUILD_DIR) $(TARGET)
 
 run: $(TARGET)
 	./$(TARGET)
