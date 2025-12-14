@@ -1,16 +1,16 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
+
 #include "Masks.h"
 #include "MyTypes.h"
 #include "Attack.h"
 #include "BitBoard.h"
-#include "Perft.h"
 
 extern Move moveList[256];
 extern int moveCount;
 
 // Function prototypes
-void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side,int piece);
+void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece);
 void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateRookMoves(U64 rooks, U64 ownPieces, U64 enemyPieces, int piece);
@@ -19,7 +19,7 @@ void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece);
 void GenerateMovesInternal(U64 P, U64 N, U64 B, U64 R, U64 Q, U64 K, U64 ownPieces, U64 enemyPieces, int side);
 void GenerateMoves();
 void ResetMoveList();
-int  DetectCapture(int to);
+int DetectCapture(int to);
 void AddPromotionMoves(int from, int to, int captured, int side);
 void PrintMoveList();
 
