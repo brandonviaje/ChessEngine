@@ -66,6 +66,7 @@ Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/b
 
 * [Alpha-Beta Pruning](https://cs.stanford.edu/people/eroberts/courses/soco/projects/2003-04/intelligent-search/alphabeta.html)
 * [Best Magics So Far](https://www.chessprogramming.org/Best_Magics_so_far)
+* [Chess Move Generation with Magic Bitboards](https://essays.jwatzman.org/essays/chess-move-generation-with-magic-bitboards.html)
 * [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
 * [Magic Bitboards](https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks#Magic_Bitboards)
 * [Minimax Algorithm](https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence/)
@@ -75,3 +76,4 @@ Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/b
 <!-- MARKDOWN LINKS & IMAGES -->
 [C]: https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/C_Programming_Language.svg/926px-C_Programming_Language.svg.png
 [C-url]: https://www.c-language.org/
+
