@@ -37,7 +37,6 @@
 #define GetBit(board,square) ((board) & (1ULL << (square)))
 #define PopBit(board,square) ((board) &= ~(1ULL << (square)))
 
-
 // Typedef
 typedef unsigned long long U64;
 

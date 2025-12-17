@@ -7,8 +7,10 @@
 #include "Magic.h"
 #include "BitBoard.h"
 
-extern Move moveList[256];
-extern int moveCount;
+typedef struct {
+    Move moves[MAX_MOVES];
+    int count;
+} MoveList;
 
 // Function prototypes
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece);
