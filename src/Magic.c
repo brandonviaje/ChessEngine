@@ -8,7 +8,7 @@ SMagic bishopAttacks[64];
 SMagic rookAttacks[64];
 extern U64 occupied;
 
-// Generate relevant blocker masks
+// Generate relevant bit masks
 U64 BishopMask(int square)
 {
     U64 mask = 0ULL;
@@ -26,6 +26,7 @@ U64 BishopMask(int square)
     return mask;
 }
 
+// Generate relevant bit masks
 U64 RookMask(int square)
 {
     U64 mask = 0ULL;
@@ -155,15 +156,13 @@ void InitMagicTable(SMagic attacks[64], int isBishop)
         int tableSize = 1 << bits;
         magic->ptr = malloc(sizeof(U64) * tableSize);
 
-        // Fill table
+        // Fill table using magic hash
         for (int i = 0; i < tableSize; i++)
         {
             U64 blockers = GetBlockerFromIndex(i, magic->mask);
-
-            if (isBishop)
-                magic->ptr[i] = BishopAttacksSlow(sq, blockers);
-            else
-                magic->ptr[i] = RookAttacksSlow(sq, blockers);
+            U64 attacksBB = isBishop ? BishopAttacksSlow(sq, blockers) : RookAttacksSlow(sq, blockers);
+            int index = (blockers * magic->magic) >> magic->shift;
+            magic->ptr[index] = attacksBB;
         }
     }
 }

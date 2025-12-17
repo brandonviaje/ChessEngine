@@ -137,37 +137,9 @@ void PrintMoveList()
     }
 }
 
-void TestSlidingAttacks()
-{
-    InitAttacks(); // build pawn, knight, king, and magic sliding attacks
-
-    int square = 36; // e5
-    U64 blockers = 0ULL;
-
-    // Set some random blockers
-    SetBit(blockers, 28); // e4
-    SetBit(blockers, 44); // e6
-    SetBit(blockers, 35); // d5
-    SetBit(blockers, 37); // f5
-
-    printf("Blockers on e5:\n");
-    PrintBitBoard(blockers);
-
-    U64 rookBB = GetRookAttacks(square, blockers);
-    printf("Rook attacks from e5:\n");
-    PrintBitBoard(rookBB);
-
-    U64 bishopBB = GetBishopAttacks(square, blockers);
-    printf("Bishop attacks from e5:\n");
-    PrintBitBoard(bishopBB);
-
-    U64 queenBB = rookBB | bishopBB;
-    printf("Queen attacks from e5:\n");
-    PrintBitBoard(queenBB);
-}
-
 int main()
 {
-    TestSlidingAttacks();
+    TestAllMagicAttacks();
+    StressTestMagic();
     return 0;
 }
