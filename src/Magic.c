@@ -1,237 +1,184 @@
 #include "../include/Magic.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-U64 *attackTable = NULL;
+U64 bishopMasks[64];
+U64 rookMasks[64];
 SMagic bishopAttacks[64];
 SMagic rookAttacks[64];
 extern U64 occupied;
 
-// generate relevant blocker masks for each square
+// Generate relevant blocker masks
 U64 BishopMask(int square)
 {
     U64 mask = 0ULL;
     int rank = square / 8, file = square % 8;
 
-    // Up-Right
     for (int r = rank + 1, f = file + 1; r <= 6 && f <= 6; r++, f++)
-        SetBit(mask, (r * 8 + f));
-
-    // Up-Left
+        SetBit(mask, r * 8 + f);
     for (int r = rank + 1, f = file - 1; r <= 6 && f >= 1; r++, f--)
-        SetBit(mask, (r * 8 + f));
-
-    // Down-Right
+        SetBit(mask, r * 8 + f);
     for (int r = rank - 1, f = file + 1; r >= 1 && f <= 6; r--, f++)
-        SetBit(mask, (r * 8 + f));
-
-    // Down-Left
+        SetBit(mask, r * 8 + f);
     for (int r = rank - 1, f = file - 1; r >= 1 && f >= 1; r--, f--)
-        SetBit(mask, (r * 8 + f));
+        SetBit(mask, r * 8 + f);
 
     return mask;
 }
 
-// generate relevant blocker masks for each square
 U64 RookMask(int square)
 {
     U64 mask = 0ULL;
     int rank = square / 8, file = square % 8;
 
-    // up: stop before edge 7
     for (int r = rank + 1; r <= 6; r++)
-        SetBit(mask, (r * 8 + file));
-
-    // down: stop before edge 0
+        SetBit(mask, r * 8 + file);
     for (int r = rank - 1; r >= 1; r--)
-        SetBit(mask, (r * 8 + file));
-
-    // right: stop before edge 7
+        SetBit(mask, r * 8 + file);
     for (int f = file + 1; f <= 6; f++)
-        SetBit(mask, (rank * 8 + f));
-
-    // left: stop before edge 0
+        SetBit(mask, rank * 8 + f);
     for (int f = file - 1; f >= 1; f--)
-        SetBit(mask, (rank * 8 + f));
+        SetBit(mask, rank * 8 + f);
 
     return mask;
 }
 
-// generate blocker bitboard from index
-U64 GenerateBlockerFromIndex(int index, U64 mask)
+// Generate blocker bitboard from index
+U64 GetBlockerFromIndex(int index, U64 mask)
 {
     U64 blockers = 0ULL;
-    int bits[12]; // max 12 relevant bits
-    int bitCount = 0;
+    int bits = __builtin_popcountll(mask);
 
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < bits; i++)
     {
-        if (mask & (1ULL << i))
-            bits[bitCount++] = i;
+        int bitPos = __builtin_ctzll(mask); // least significant set bit
+        if (index & (1ULL << i))
+            SetBit(blockers, bitPos);
+        mask &= (mask - 1); // pop LSB
     }
 
-    for (int i = 0; i < bitCount; i++)
-    {
-        if (index & (1 << i))
-            blockers |= 1ULL << bits[i];
-    }
     return blockers;
 }
 
-// bishop sliding attack generation
-U64 ComputeBishopAttacks(int square, U64 blockers)
+// Slow sliding attacks
+U64 RookAttacksSlow(int sq, U64 blockers)
+{
+    U64 attacks = 0ULL;
+    int r = sq / 8, f = sq % 8;
+
+    for (int rr = r + 1; rr <= 7; rr++)
+    {
+        int s = rr * 8 + f;
+        attacks |= 1ULL << s;
+        if (blockers & (1ULL << s))
+            break;
+    }
+    for (int rr = r - 1; rr >= 0; rr--)
+    {
+        int s = rr * 8 + f;
+        attacks |= 1ULL << s;
+        if (blockers & (1ULL << s))
+            break;
+    }
+    for (int ff = f + 1; ff <= 7; ff++)
+    {
+        int s = r * 8 + ff;
+        attacks |= 1ULL << s;
+        if (blockers & (1ULL << s))
+            break;
+    }
+    for (int ff = f - 1; ff >= 0; ff--)
+    {
+        int s = r * 8 + ff;
+        attacks |= 1ULL << s;
+        if (blockers & (1ULL << s))
+            break;
+    }
+
+    return attacks;
+}
+
+U64 BishopAttacksSlow(int square, U64 blockers)
 {
     U64 attacks = 0ULL;
     int rank = square / 8, file = square % 8;
 
-    // Up-Right
     for (int r = rank + 1, f = file + 1; r <= 7 && f <= 7; r++, f++)
     {
-        SetBit(attacks, r * 8 + f);
-        if (blockers & (1ULL << (r * 8 + f)))
+        int sq = r * 8 + f;
+        attacks |= 1ULL << sq;
+        if (blockers & (1ULL << sq))
             break;
     }
-    // Up-Left
     for (int r = rank + 1, f = file - 1; r <= 7 && f >= 0; r++, f--)
     {
-        SetBit(attacks, r * 8 + f);
-        if (blockers & (1ULL << (r * 8 + f)))
+        int sq = r * 8 + f;
+        attacks |= 1ULL << sq;
+        if (blockers & (1ULL << sq))
             break;
     }
-    // Down-Right
     for (int r = rank - 1, f = file + 1; r >= 0 && f <= 7; r--, f++)
     {
-        SetBit(attacks, r * 8 + f);
-        if (blockers & (1ULL << (r * 8 + f)))
+        int sq = r * 8 + f;
+        attacks |= 1ULL << sq;
+        if (blockers & (1ULL << sq))
             break;
     }
-    // Down-Left
     for (int r = rank - 1, f = file - 1; r >= 0 && f >= 0; r--, f--)
     {
-        SetBit(attacks, r * 8 + f);
-        if (blockers & (1ULL << (r * 8 + f)))
+        int sq = r * 8 + f;
+        attacks |= 1ULL << sq;
+        if (blockers & (1ULL << sq))
             break;
     }
+
     return attacks;
 }
 
-// rook sliding attack generation
-U64 ComputeRookAttacks(int square, U64 blockers)
+void InitMagicTable(SMagic attacks[64], int isBishop)
 {
-    U64 attacks = 0ULL;
-    int rank = square / 8, file = square % 8;
+    for (int sq = 0; sq < 64; sq++)
+    {
+        SMagic *magic = &attacks[sq];
 
-    // Up
-    for (int r = rank + 1; r <= 7; r++)
-    {
-        SetBit(attacks, r * 8 + file);
-        if (blockers & (1ULL << (r * 8 + file)))
-            break;
-    }
-    // Down
-    for (int r = rank - 1; r >= 0; r--)
-    {
-        SetBit(attacks, r * 8 + file);
-        if (blockers & (1ULL << (r * 8 + file)))
-            break;
-    }
-    // Right
-    for (int f = file + 1; f <= 7; f++)
-    {
-        SetBit(attacks, rank * 8 + f);
-        if (blockers & (1ULL << (rank * 8 + f)))
-            break;
-    }
-    // Left
-    for (int f = file - 1; f >= 0; f--)
-    {
-        SetBit(attacks, rank * 8 + f);
-        if (blockers & (1ULL << (rank * 8 + f)))
-            break;
-    }
-    return attacks;
-}
+        // Compute relevant blocker mask
+        magic->mask = isBishop ? BishopMask(sq) : RookMask(sq);
 
-// fill out bishop table with attack
-void FillBishopTable(int square)
-{
-    U64 mask = bishopAttacks[square].mask;
-    int numBits = __builtin_popcountll(mask);
-    int tableSize = 1 << numBits;
+        // Assign magic number
+        magic->magic = isBishop ? bishopMagics[sq] : rookMagics[sq];
 
-    for (int i = 0; i < tableSize; i++)
-    {
-        U64 blockers = GenerateBlockerFromIndex(i, mask);
-        U64 attack = ComputeBishopAttacks(square, blockers);
-        int index = (blockers * bishopAttacks[square].magic) >> bishopAttacks[square].shift;
-        bishopAttacks[square].ptr[index] = attack;
+        // Shift for table index
+        int bits = __builtin_popcountll(magic->mask);
+        magic->shift = 64 - bits;
+
+        // Allocate table of size 2^bits
+        int tableSize = 1 << bits;
+        magic->ptr = malloc(sizeof(U64) * tableSize);
+
+        // Fill table
+        for (int i = 0; i < tableSize; i++)
+        {
+            U64 blockers = GetBlockerFromIndex(i, magic->mask);
+
+            if (isBishop)
+                magic->ptr[i] = BishopAttacksSlow(sq, blockers);
+            else
+                magic->ptr[i] = RookAttacksSlow(sq, blockers);
+        }
     }
 }
 
-// fill out rook table with attack
-void FillRookTable(int square)
+void InitMagic()
 {
-    U64 mask = rookAttacks[square].mask;
-    int numBits = __builtin_popcountll(mask);
-    int tableSize = 1 << numBits;
-
-    for (int i = 0; i < tableSize; i++)
-    {
-        U64 blockers = GenerateBlockerFromIndex(i, mask);
-        U64 attack = ComputeRookAttacks(square, blockers);
-        int index = (blockers * rookAttacks[square].magic) >> rookAttacks[square].shift;
-        rookAttacks[square].ptr[index] = attack;
-    }
+    InitMagicTable(rookAttacks, 0);
+    InitMagicTable(bishopAttacks, 1);
 }
 
-void InitMagicBitBoards()
+void CleanupMagic()
 {
-    // calculate total table size
-    int totalBishopSize = 0;
-    int totalRookSize = 0;
-
-    for (int square = 0; square < 64; square++)
+    for (int sq = 0; sq < 64; sq++)
     {
-        // add all possible blocker combos for the bishop square, same with rook square
-        totalBishopSize += 1 << __builtin_popcountll(BishopMask(square));
-        totalRookSize += 1 << __builtin_popcountll(RookMask(square));
+        free(rookAttacks[sq].ptr);
+        free(bishopAttacks[sq].ptr);
     }
-
-    int totalSize = totalBishopSize + totalRookSize;
-
-    attackTable = (U64 *)malloc(totalSize * sizeof(U64)); // allocate attack table
-
-    int bishopOffset = 0;
-    int rookOffset = totalBishopSize; // rook table starts after bishop tables
-
-    // initialize SMagic structs
-    for (int square = 0; square < 64; square++)
-    {
-        // Bishop
-        bishopAttacks[square].ptr = &attackTable[bishopOffset];
-        bishopAttacks[square].mask = BishopMask(square);
-        bishopAttacks[square].magic = bishopMagics[square];
-        int bishopBits = __builtin_popcountll(bishopAttacks[square].mask);
-        bishopAttacks[square].shift = 64 - bishopBits;
-        bishopOffset += 1 << bishopBits;
-
-        // Rook
-        rookAttacks[square].ptr = &attackTable[rookOffset];
-        rookAttacks[square].mask = RookMask(square);
-        rookAttacks[square].magic = rookMagics[square];
-        int rookBits = __builtin_popcountll(rookAttacks[square].mask);
-        rookAttacks[square].shift = 64 - rookBits;
-        rookOffset += 1 << rookBits;
-    }
-
-    // fill all tables
-    for (int square = 0; square < 64; square++)
-    {
-        FillBishopTable(square);
-        FillRookTable(square);
-    }
-}
-
-void CleanupMagicBitboards()
-{
-    free(attackTable);  // dealloc mem
-    attackTable = NULL; // prevent dangling pointers
 }

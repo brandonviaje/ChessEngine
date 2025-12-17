@@ -4,6 +4,7 @@
 #include "Masks.h"
 #include "MyTypes.h"
 #include "Attack.h"
+#include "Magic.h"
 #include "BitBoard.h"
 
 extern Move moveList[256];
