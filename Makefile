@@ -11,6 +11,7 @@ BUILD_DIR = build
 
 # Source files
 SRCS = $(SRC_DIR)/BitBoard.c \
+	   $(SRC_DIR)/Main.c \
        $(SRC_DIR)/MoveGen.c \
        $(SRC_DIR)/Attack.c \
        $(SRC_DIR)/Magic.c \

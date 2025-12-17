@@ -137,9 +137,3 @@ void PrintMoveList()
     }
 }
 
-int main()
-{
-    TestAllMagicAttacks();
-    StressTestMagic();
-    return 0;
-}
