@@ -270,6 +270,31 @@ void MakeMove(MoveList *list, int index)
         }
         break;
     }
+
+    case FLAG_DOUBLE_PUSH:
+    {
+        MovePiece(piece, fromMask, toMask);
+
+        // check if move made is a capture
+        if (captured != -1)
+        {
+            // remove captured piece from its bitboard
+            bitboards[captured] &= ~toMask;
+
+            // Update corresponding captured pieces bitboard
+            if (captured <= K)
+            {
+                whitePieces &= ~toMask;
+            }
+            else
+            {
+                blackPieces &= ~toMask;
+            }
+            enpassant = side == WHITE ? to - 8 : to + 8; // set enpassant square
+        }
+        break;
+    }
+
     case FLAG_ENPASSANT:
     {
 
@@ -426,6 +451,15 @@ void UndoMove(MoveList *list, int index)
             toRook = 1ULL << (to + 1); // d8
             MovePiece(r, toRook, fromRook);
         }
+        break;
+    }
+
+    case FLAG_DOUBLE_PUSH:
+    {
+        MovePiece(piece, toMask, fromMask); // move piece back
+        if (captured != -1)
+            RestorePiece(captured, toMask); // restore captured piece
+        enpassant = -1;
         break;
     }
 

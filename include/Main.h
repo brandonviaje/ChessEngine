@@ -5,5 +5,6 @@
 #include "Attack.h"
 #include "MoveGen.h"
 #include "BitBoard.h"
+#include "Perft.h"
 
 #endif

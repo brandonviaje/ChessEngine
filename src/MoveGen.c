@@ -221,29 +221,6 @@ void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece, Mo
     GenerateBishopMoves(queen, ownPieces, enemyPieces, piece, list);
 }
 
-void GenerateMovesInternal(U64 Pawn, U64 Knight, U64 Bishop, U64 Rook, U64 Queen, U64 King, U64 ownPieces, U64 enemyPieces, int side, MoveList *list)
-{
-    ResetMoveList(list);
-    GeneratePawnMoves(Pawn, ownPieces, enemyPieces, side, side == WHITE ? P : p, list);
-    GenerateKnightMoves(Knight, ownPieces, enemyPieces, side == WHITE ? N : n, list);
-    GenerateBishopMoves(Bishop, ownPieces, enemyPieces, side == WHITE ? B : b, list);
-    GenerateRookMoves(Rook, ownPieces, enemyPieces, side == WHITE ? R : r, list);
-    GenerateQueenMoves(Queen, ownPieces, enemyPieces, side == WHITE ? Q : q, list);
-    GenerateKingMoves(King, ownPieces, enemyPieces, side == WHITE ? K : k, list);
-}
-
-void GenerateMoves(MoveList *list)
-{
-    if (side == WHITE)
-    {
-        GenerateMovesInternal(bitboards[P], bitboards[N], bitboards[B], bitboards[R], bitboards[Q], bitboards[K], whitePieces, blackPieces, side, list); // white
-    }
-    else
-    {
-        GenerateMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k], blackPieces, whitePieces, side, list); // black
-    }
-}
-
 // Reset Move List and Move Count
 void ResetMoveList(MoveList *list)
 {
@@ -296,6 +273,60 @@ void AddMove(MoveList *list, Move m)
     {
         fprintf(stderr, "MoveList overflow!\n");
         exit(1);
+    }
+}
+
+
+int IsInCheck()
+{
+    int enemySide = side ^ 1; 
+    int kingSq = __builtin_ctzll(bitboards[side == WHITE ? K : k]);
+
+    // Check pawn attacks
+    if (pawnAttacks[enemySide][kingSq] & bitboards[enemySide == WHITE ? P : p])
+        return 1;
+
+    // Check knight attacks
+    if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n])
+        return 1;
+
+    // Check king attacks 
+    if (kingAttacks[kingSq] & bitboards[enemySide == WHITE ? K : k])
+        return 1;
+
+    // Check rook / queen attacks along orthogonals
+    U64 rookBB = bitboards[enemySide == WHITE ? R : r] | bitboards[enemySide == WHITE ? Q : q];
+    if (GetRookAttacks(kingSq, occupied) & rookBB)
+        return 1;
+
+    // Check bishop / queen attacks along diagonals
+    U64 bishopBB = bitboards[enemySide == WHITE ? B : b] | bitboards[enemySide == WHITE ? Q : q];
+    if (GetBishopAttacks(kingSq, occupied) & bishopBB)
+        return 1;
+
+    return 0; // king is safe
+}
+
+void GenerateMovesInternal(U64 Pawn, U64 Knight, U64 Bishop, U64 Rook, U64 Queen, U64 King, U64 ownPieces, U64 enemyPieces, int side, MoveList *list)
+{
+    ResetMoveList(list);
+    GeneratePawnMoves(Pawn, ownPieces, enemyPieces, side, side == WHITE ? P : p, list);
+    GenerateKnightMoves(Knight, ownPieces, enemyPieces, side == WHITE ? N : n, list);
+    GenerateBishopMoves(Bishop, ownPieces, enemyPieces, side == WHITE ? B : b, list);
+    GenerateRookMoves(Rook, ownPieces, enemyPieces, side == WHITE ? R : r, list);
+    GenerateQueenMoves(Queen, ownPieces, enemyPieces, side == WHITE ? Q : q, list);
+    GenerateKingMoves(King, ownPieces, enemyPieces, side == WHITE ? K : k, list);
+}
+
+void GenerateMoves(MoveList *list)
+{
+    if (side == WHITE)
+    {
+        GenerateMovesInternal(bitboards[P], bitboards[N], bitboards[B], bitboards[R], bitboards[Q], bitboards[K], whitePieces, blackPieces, side, list); // white
+    }
+    else
+    {
+        GenerateMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k], blackPieces, whitePieces, side, list); // black
     }
 }
 

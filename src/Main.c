@@ -3,11 +3,13 @@
 int main()
 {
     InitAttacks();
-    ParseFEN(pawn_promotion);
-    MoveList list;
-    GenerateMoves(&list);
-    PrintMoveList(&list);
-    PrintBitBoard(occupied);
+    ParseFEN(starting_position);
+    
+    for (int depth = 1; depth <= 4; depth++) {
+        U64 nodes = Perft(depth);
+        printf("Perft depth %d: %llu nodes\n", depth, nodes);
+    }
+    
     CleanupMagic();
     return 0;
 }
