@@ -4,7 +4,7 @@
 #include "MyTypes.h"
 #include "Attack.h"
 #include "MoveGen.h"
-#include "BitBoard.h"
+#include "Board.h"
 #include "Perft.h"
 
 #endif

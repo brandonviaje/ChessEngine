@@ -10,7 +10,7 @@ TEST_DIR = tests
 BUILD_DIR = build
 
 # Source files
-SRCS = $(SRC_DIR)/BitBoard.c \
+SRCS = $(SRC_DIR)/Board.c \
 	   $(SRC_DIR)/Main.c \
        $(SRC_DIR)/MoveGen.c \
        $(SRC_DIR)/Attack.c \

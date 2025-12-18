@@ -1,4 +1,4 @@
-#include "../include/BitBoard.h"
+#include "../include/Board.h"
 
 // Bitboards
 U64 bitboards[12];

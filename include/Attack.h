@@ -1,7 +1,7 @@
 #ifndef ATTACK_H
 #define ATTACK_H
 
-#include "BitBoard.h"
+#include "Board.h"
 #include "MoveGen.h"
 #include "MyTypes.h"
 #include "Magic.h"

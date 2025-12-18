@@ -1,7 +1,7 @@
 #ifndef MAGIC_H
 #define MAGIC_H
 
-#include "BitBoard.h"
+#include "Board.h"
 #include "MyTypes.h"
 #include "Masks.h"
 

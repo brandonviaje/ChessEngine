@@ -5,7 +5,7 @@
 #include "MyTypes.h"
 #include "Attack.h"
 #include "Magic.h"
-#include "BitBoard.h"
+#include "Board.h"
 
 typedef struct MoveList
 {
