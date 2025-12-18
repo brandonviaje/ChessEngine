@@ -200,7 +200,7 @@ void ParseFEN(char *FEN)
 }
 
 // Make Move Function
-void MakeMove(int index)
+void MakeMove(MoveList *list, int index)
 {
     // Catch move index out of bounds
     if (index < 0 || index >= MAX_MOVES)
@@ -209,12 +209,12 @@ void MakeMove(int index)
         exit(EXIT_FAILURE);
     }
 
-    int piece = moveList[index].piece;
-    int from = moveList[index].from;
-    int to = moveList[index].to;
-    int captured = moveList[index].captured;
-    int promotedPiece = moveList[index].promotion;
-    int moveFlag = moveList[index].flags;
+    int piece = list->moves[index].piece;
+    int from = list->moves[index].from;
+    int to = list->moves[index].to;
+    int captured = list->moves[index].captured;
+    int promotedPiece = list->moves[index].promotion;
+    int moveFlag = list->moves[index].flags;
 
     // Catch square index out of bounds
     if (from < 0 || from > 63 || to < 0 || to > 63)
@@ -357,7 +357,7 @@ void MakeMove(int index)
 }
 
 // Undo Move Function
-void UndoMove(int index)
+void UndoMove(MoveList *list, int index)
 {
     // Catch move index out of bounds
     if (index < 0 || index >= MAX_MOVES)
@@ -366,12 +366,12 @@ void UndoMove(int index)
         exit(EXIT_FAILURE);
     }
 
-    int piece = moveList[index].piece;
-    int from = moveList[index].from;
-    int to = moveList[index].to;
-    int captured = moveList[index].captured;
-    int promotedPiece = moveList[index].promotion;
-    int moveFlag = moveList[index].flags;
+    int piece = list->moves[index].piece;
+    int from = list->moves[index].from;
+    int to = list->moves[index].to;
+    int captured = list->moves[index].captured;
+    int promotedPiece = list->moves[index].promotion;
+    int moveFlag = list->moves[index].flags;
 
     // get prev side
     int prevSide = side ^ 1;

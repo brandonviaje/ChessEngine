@@ -17,6 +17,8 @@ extern unsigned char castle; // castling rights
 extern int halfmove;         // halfmove clock
 extern int fullmove;         // fullmove number
 
+typedef struct MoveList MoveList;
+
 // Function Prototypes
 void ResetBoardState();
 int CharToPiece(char c);
@@ -24,8 +26,8 @@ void SetPiece(int piece, int square);
 void PrintBitBoard(U64 board);
 void PrintGameState();
 void ParseFEN(char *FEN);
-void MakeMove(int index);
-void UndoMove(int index);
+void MakeMove(MoveList *list, int index);
+void UndoMove(MoveList *list, int index);
 void MovePiece(int piece, U64 fromMask, U64 toMask);
 void RestorePiece(int piece, U64 mask);
 

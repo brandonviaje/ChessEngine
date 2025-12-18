@@ -36,7 +36,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
             // promotion capture
             if ((side == WHITE && ((1ULL << from) & RANK_7)) || (side == BLACK && ((1ULL << from) & RANK_2)))
             {
-                AddPromotionMoves(from, to, captured, piece, list);
+                AddPromotionMoves(from, to, captured, side, list);
             }
             else
             {
@@ -56,7 +56,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
             if ((side == WHITE && ((1ULL << from) & RANK_7)) ||
                 (side == BLACK && ((1ULL << from) & RANK_2)))
             {
-                AddPromotionMoves(from, to, -1, piece, list);
+                AddPromotionMoves(from, to, -1, side, list);
             }
             else
             {
@@ -270,9 +270,9 @@ int DetectCapture(int to)
 }
 
 // Add promotion moves for pawns
-void AddPromotionMoves(int from, int to, int captured, int piece, MoveList *list)
+void AddPromotionMoves(int from, int to, int captured, int side, MoveList *list)
 {
-    if (piece == P)
+    if (side == WHITE)
     {
         AddMove(list, (Move){P, from, to, Q, captured, FLAG_PROMOTION});
         AddMove(list, (Move){P, from, to, R, captured, FLAG_PROMOTION});
