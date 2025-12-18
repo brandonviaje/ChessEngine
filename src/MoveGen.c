@@ -221,12 +221,7 @@ void GenerateQueenMoves(U64 queen, U64 ownPieces, U64 enemyPieces, int piece, Mo
     GenerateBishopMoves(queen, ownPieces, enemyPieces, piece, list);
 }
 
-// Reset Move List and Move Count
-void ResetMoveList(MoveList *list)
-{
-    memset(list->moves, 0, sizeof(list->moves)); // clear out moves
-    list->count = 0;                             // reset count
-}
+// Detect Captures
 
 int DetectCapture(int to)
 {
@@ -265,6 +260,7 @@ void AddPromotionMoves(int from, int to, int captured, int side, MoveList *list)
     }
 }
 
+// Add generic Moves to move list
 void AddMove(MoveList *list, Move m)
 {
     if (list->count < MAX_MOVES)
@@ -276,10 +272,10 @@ void AddMove(MoveList *list, Move m)
     }
 }
 
-
+// Check if king is in check by enemy pieces
 int IsInCheck()
 {
-    int enemySide = side ^ 1; 
+    int enemySide = side ^ 1;
     int kingSq = __builtin_ctzll(bitboards[side == WHITE ? K : k]);
 
     // Check pawn attacks
@@ -290,7 +286,7 @@ int IsInCheck()
     if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n])
         return 1;
 
-    // Check king attacks 
+    // Check king attacks
     if (kingAttacks[kingSq] & bitboards[enemySide == WHITE ? K : k])
         return 1;
 
@@ -305,6 +301,13 @@ int IsInCheck()
         return 1;
 
     return 0; // king is safe
+}
+
+// Reset Move List and Move Count
+void ResetMoveList(MoveList *list)
+{
+    memset(list->moves, 0, sizeof(list->moves)); // clear out moves
+    list->count = 0;                             // reset count
 }
 
 void GenerateMovesInternal(U64 Pawn, U64 Knight, U64 Bishop, U64 Rook, U64 Queen, U64 King, U64 ownPieces, U64 enemyPieces, int side, MoveList *list)

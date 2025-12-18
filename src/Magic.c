@@ -136,6 +136,8 @@ U64 BishopAttacksSlow(int square, U64 blockers)
     return attacks;
 }
 
+// Initialize Magic Tables
+
 void InitMagicTable(SMagic attacks[64], int isBishop)
 {
     for (int sq = 0; sq < 64; sq++)
@@ -172,6 +174,8 @@ void InitMagic()
     InitMagicTable(rookAttacks, 0);
     InitMagicTable(bishopAttacks, 1);
 }
+
+// Cleanup Attack Tables
 
 void CleanupMagic()
 {

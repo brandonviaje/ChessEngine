@@ -74,7 +74,26 @@ U64 GenerateKingAttacks(int square)
     return attacks;
 }
 
+// Sliding Attacks
+
+U64 GetRookAttacks(int square, U64 blockers)
+{
+    SMagic *magic = &rookAttacks[square];
+    U64 relevantBlockers = blockers & magic->mask;
+    int index = (int)((relevantBlockers * magic->magic) >> magic->shift);
+    return magic->ptr[index];
+}
+
+U64 GetBishopAttacks(int square, U64 blockers)
+{
+    SMagic *magic = &bishopAttacks[square];
+    U64 relevantBlockers = blockers & magic->mask;
+    int index = (int)((relevantBlockers * magic->magic) >> magic->shift);
+    return magic->ptr[index];
+}
+
 // Initialize tables
+
 void InitPawnAttacks()
 {
     for (int square = 0; square < 64; square++)
@@ -96,26 +115,10 @@ void InitKingAttacks()
         kingAttacks[square] = GenerateKingAttacks(square);
 }
 
-U64 GetRookAttacks(int square, U64 blockers)
-{
-    SMagic *magic = &rookAttacks[square];
-    U64 relevantBlockers = blockers & magic->mask;
-    int index = (int)((relevantBlockers * magic->magic) >> magic->shift);
-    return magic->ptr[index];
-}
-
-U64 GetBishopAttacks(int square, U64 blockers)
-{
-    SMagic *magic = &bishopAttacks[square];
-    U64 relevantBlockers = blockers & magic->mask;
-    int index = (int)((relevantBlockers * magic->magic) >> magic->shift);
-    return magic->ptr[index];
-}
-
 void InitAttacks()
 {
     InitPawnAttacks();
     InitKingAttacks();
     InitKnightAttacks();
-    InitMagic(); // initialize rook and bishop magic tables
+    InitMagic();
 }
