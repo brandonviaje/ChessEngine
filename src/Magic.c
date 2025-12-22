@@ -53,7 +53,7 @@ U64 GetBlockerFromIndex(int index, U64 mask)
     for (int i = 0; i < bits; i++)
     {
         int bitPos = __builtin_ctzll(mask);
-        
+
         if (index & (1 << i))
             blockers |= (1ULL << bitPos);
 

@@ -134,7 +134,7 @@ U64 GenerateAllAttacks(U64 enemyPieces, U64 occupied, int enemy)
     {
         int sq = __builtin_ctzll(pawns);
         attacks |= pawnAttacks[enemy == WHITE ? 0 : 1][sq]; // add pawn attacks
-        pawns &= pawns - 1; // pop pawn
+        pawns &= pawns - 1;                                 // pop pawn
     }
 
     // knights attacks
@@ -143,7 +143,7 @@ U64 GenerateAllAttacks(U64 enemyPieces, U64 occupied, int enemy)
     {
         int sq = __builtin_ctzll(knights);
         attacks |= knightAttacks[sq]; // add knight attacks
-        knights &= knights - 1; // pop knight
+        knights &= knights - 1;       // pop knight
     }
 
     // bishops and queens attacks
@@ -152,7 +152,7 @@ U64 GenerateAllAttacks(U64 enemyPieces, U64 occupied, int enemy)
     {
         int sq = __builtin_ctzll(bishops);
         attacks |= GetBishopAttacks(sq, occupied); // sliding attacks
-        bishops &= bishops - 1; // pop bishop/queen
+        bishops &= bishops - 1;                    // pop bishop/queen
     }
 
     // rooks and queens attacks
@@ -161,7 +161,7 @@ U64 GenerateAllAttacks(U64 enemyPieces, U64 occupied, int enemy)
     {
         int sq = __builtin_ctzll(rooks);
         attacks |= GetRookAttacks(sq, occupied); // sliding attacks
-        rooks &= rooks - 1; // pop rook/queen
+        rooks &= rooks - 1;                      // pop rook/queen
     }
 
     // king attacks

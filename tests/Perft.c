@@ -7,7 +7,7 @@ U64 Perft(int depth)
         return 1;
 
     MoveList list;
-    GenerateLegalMoves(&list);  
+    GenerateLegalMoves(&list);
 
     U64 nodes = 0;
 
@@ -36,8 +36,8 @@ void PerftDivide(int depth)
 
         char fromFile = 'a' + (list.moves[i].from % 8);
         char fromRank = '1' + (list.moves[i].from / 8);
-        char toFile   = 'a' + (list.moves[i].to % 8);
-        char toRank   = '1' + (list.moves[i].to / 8);
+        char toFile = 'a' + (list.moves[i].to % 8);
+        char toRank = '1' + (list.moves[i].to / 8);
 
         printf("%c%c%c%c: %llu\n", fromFile, fromRank, toFile, toRank, nodes);
         total += nodes;

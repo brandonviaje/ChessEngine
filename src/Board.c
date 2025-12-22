@@ -68,21 +68,36 @@ int CharToPiece(char c)
     }
 }
 
-char PieceToChar(int piece) {
-    switch(piece) {
-        case P: return 'P';
-        case N: return 'N';
-        case B: return 'B';
-        case R: return 'R';
-        case Q: return 'Q';
-        case K: return 'K';
-        case p: return 'p';
-        case n: return 'n';
-        case b: return 'b';
-        case r: return 'r';
-        case q: return 'q';
-        case k: return 'k';
-        default: return '?';
+char PieceToChar(int piece)
+{
+    switch (piece)
+    {
+    case P:
+        return 'P';
+    case N:
+        return 'N';
+    case B:
+        return 'B';
+    case R:
+        return 'R';
+    case Q:
+        return 'Q';
+    case K:
+        return 'K';
+    case p:
+        return 'p';
+    case n:
+        return 'n';
+    case b:
+        return 'b';
+    case r:
+        return 'r';
+    case q:
+        return 'q';
+    case k:
+        return 'k';
+    default:
+        return '?';
     }
 }
 
@@ -187,10 +202,18 @@ void ParseFEN(char *FEN)
         // determine current castling rights
         switch (fields[2][j])
         {
-            case 'K': castle |= WHITE_CASTLE_K; break;
-            case 'Q': castle |= WHITE_CASTLE_Q; break;
-            case 'k': castle |= BLACK_CASTLE_K; break;
-            case 'q': castle |= BLACK_CASTLE_Q; break;
+        case 'K':
+            castle |= WHITE_CASTLE_K;
+            break;
+        case 'Q':
+            castle |= WHITE_CASTLE_Q;
+            break;
+        case 'k':
+            castle |= BLACK_CASTLE_K;
+            break;
+        case 'q':
+            castle |= BLACK_CASTLE_Q;
+            break;
         }
     }
 
@@ -538,35 +561,40 @@ void RestorePiece(int piece, U64 mask)
 void UpdateCastlingRights(int piece, int from, int to, int captured)
 {
     // king moves remove both castling rights for that side
-    if (piece == K) 
+    if (piece == K)
         castle &= ~(WHITE_CASTLE_K | WHITE_CASTLE_Q);
-    else if (piece == k) 
+    else if (piece == k)
         castle &= ~(BLACK_CASTLE_K | BLACK_CASTLE_Q);
 
     // rook moves
-    if (piece == R) {
-        if (from == 0) 
+    if (piece == R)
+    {
+        if (from == 0)
             castle &= ~WHITE_CASTLE_Q;
-        else if (from == 7) 
+        else if (from == 7)
             castle &= ~WHITE_CASTLE_K;
-    } else if (piece == r) {
-        if (from == 56) 
+    }
+    else if (piece == r)
+    {
+        if (from == 56)
             castle &= ~BLACK_CASTLE_Q;
-        else if (from == 63) 
+        else if (from == 63)
             castle &= ~BLACK_CASTLE_K;
     }
 
     // rook captures
-    if (captured == R) {
-        if (to == 0) 
+    if (captured == R)
+    {
+        if (to == 0)
             castle &= ~WHITE_CASTLE_Q;
-        else if (to == 7) 
+        else if (to == 7)
             castle &= ~WHITE_CASTLE_K;
-    } else if (captured == r) {
-        if (to == 56) 
+    }
+    else if (captured == r)
+    {
+        if (to == 56)
             castle &= ~BLACK_CASTLE_Q;
-        else if (to == 63) 
+        else if (to == 63)
             castle &= ~BLACK_CASTLE_K;
     }
-
 }

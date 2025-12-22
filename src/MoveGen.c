@@ -18,7 +18,8 @@ extern U64 pawnAttacks[2][64]; // 0 white, 1 black
 
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece, MoveList *list)
 {
-    if (!pawns) return;
+    if (!pawns)
+        return;
 
     while (pawns)
     {
@@ -66,7 +67,7 @@ void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int 
                 if ((side == WHITE && (fromMask & RANK_2)) || (side == BLACK && (fromMask & RANK_7)))
                 {
                     int over = (side == WHITE) ? from + 8 : from - 8;
-                    int to2  = (side == WHITE) ? from + 16 : from - 16;
+                    int to2 = (side == WHITE) ? from + 16 : from - 16;
                     if (!GetBit(occupied, over) && !GetBit(occupied, to2))
                     {
                         list->moves[list->count].prevEnpassant = enpassant;
@@ -117,13 +118,14 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece,
 
 void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece, MoveList *list)
 {
-    if (!king) return;
+    if (!king)
+        return;
 
     int from = __builtin_ctzll(king);
     int enemy = (piece == K) ? BLACK : WHITE;
 
-    U64 enemyAttacks = GenerateAllAttacks(enemyPieces, occupied, enemy);   // get current enemy attacks
-    U64 moves = kingAttacks[from] & ~ownPieces & ~enemyAttacks;            // mask
+    U64 enemyAttacks = GenerateAllAttacks(enemyPieces, occupied, enemy); // get current enemy attacks
+    U64 moves = kingAttacks[from] & ~ownPieces & ~enemyAttacks;          // mask
 
     // Normal king moves
     while (moves)
@@ -340,16 +342,16 @@ int IsKingInCheck(int checkSide)
     int enemySide = checkSide ^ 1;
     int kingSq = __builtin_ctzll(bitboards[checkSide == WHITE ? K : k]);
 
-    if (pawnAttacks[enemySide][kingSq] & bitboards[enemySide == WHITE ? P : p]) 
+    if (pawnAttacks[enemySide][kingSq] & bitboards[enemySide == WHITE ? P : p])
         return 1;
 
-    if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n]) 
+    if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n])
         return 1;
 
-    if (GetRookAttacks(kingSq, occupied) & (bitboards[enemySide == WHITE ? R : r] | bitboards[enemySide == WHITE ? Q : q])) 
+    if (GetRookAttacks(kingSq, occupied) & (bitboards[enemySide == WHITE ? R : r] | bitboards[enemySide == WHITE ? Q : q]))
         return 1;
 
-    if (GetBishopAttacks(kingSq, occupied) & (bitboards[enemySide == WHITE ? B : b] | bitboards[enemySide == WHITE ? Q : q])) 
+    if (GetBishopAttacks(kingSq, occupied) & (bitboards[enemySide == WHITE ? B : b] | bitboards[enemySide == WHITE ? Q : q]))
         return 1;
 
     return 0;
