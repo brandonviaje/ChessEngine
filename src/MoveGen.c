@@ -18,75 +18,73 @@ extern U64 pawnAttacks[2][64]; // 0 white, 1 black
 
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece, MoveList *list)
 {
-    if (!pawns)
-        return;
+    if (!pawns) return;
 
     while (pawns)
     {
-        int from = __builtin_ctzll(pawns);
+        int from = __builtin_ctzll(pawns); // index of LSB pawn
+        U64 fromMask = 1ULL << from;
 
-        // pawn captures
+        // Capture moves
         U64 attacks = pawnAttacks[side][from] & enemyPieces;
-
         while (attacks)
         {
             int to = __builtin_ctzll(attacks);
             int captured = DetectCapture(to);
 
-            // promotion capture
-            if ((side == WHITE && ((1ULL << from) & RANK_7)) || (side == BLACK && ((1ULL << from) & RANK_2)))
+            // Promotion captures
+            if ((side == WHITE && (fromMask & RANK_7)) || (side == BLACK && (fromMask & RANK_2)))
             {
+                list->moves[list->count].prevEnpassant = enpassant;
                 AddPromotionMoves(from, to, captured, side, list);
             }
             else
             {
-                AddMove(list, (Move){piece, from, to, -1, captured, FLAG_NONE});
+                list->moves[list->count].prevEnpassant = enpassant;
+                AddMove(list, (Move){piece, from, to, -1, captured, FLAG_NONE, enpassant});
             }
 
-            attacks &= attacks - 1;
+            attacks &= attacks - 1; // pop LSB
         }
 
-        // single push
-
+        // Single push
         int to = (side == WHITE) ? from + 8 : from - 8;
-
-        if (!(occupied & (1ULL << to)))
+        if (!GetBit(occupied, to))
         {
-            // promotion push
-            if ((side == WHITE && ((1ULL << from) & RANK_7)) ||
-                (side == BLACK && ((1ULL << from) & RANK_2)))
+            // Promotion push
+            if ((side == WHITE && (fromMask & RANK_7)) || (side == BLACK && (fromMask & RANK_2)))
             {
+                list->moves[list->count].prevEnpassant = enpassant;
                 AddPromotionMoves(from, to, -1, side, list);
             }
             else
             {
-                AddMove(list, (Move){piece, from, to, -1, -1, FLAG_NONE});
+                list->moves[list->count].prevEnpassant = enpassant;
+                AddMove(list, (Move){piece, from, to, -1, -1, FLAG_NONE, enpassant});
 
-                // double push
-                if (side == WHITE && ((1ULL << from) & RANK_2))
+                // Double push
+                if ((side == WHITE && (fromMask & RANK_2)) || (side == BLACK && (fromMask & RANK_7)))
                 {
-                    int to2 = from + 16;
-                    if (!(occupied & (1ULL << to2)))
-                        AddMove(list, (Move){piece, from, to2, -1, -1, FLAG_DOUBLE_PUSH});
-                }
-                else if (side == BLACK && ((1ULL << from) & RANK_7))
-                {
-                    int to2 = from - 16;
-                    if (!(occupied & (1ULL << to2)))
-                        AddMove(list, (Move){piece, from, to2, -1, -1, FLAG_DOUBLE_PUSH});
+                    int over = (side == WHITE) ? from + 8 : from - 8;
+                    int to2  = (side == WHITE) ? from + 16 : from - 16;
+                    if (!GetBit(occupied, over) && !GetBit(occupied, to2))
+                    {
+                        list->moves[list->count].prevEnpassant = enpassant;
+                        AddMove(list, (Move){piece, from, to2, -1, -1, FLAG_DOUBLE_PUSH, enpassant});
+                    }
                 }
             }
         }
 
-        // handle enpassant
+        // En passant
         if (enpassant != -1)
         {
             U64 epMask = 1ULL << enpassant;
-
             if (pawnAttacks[side][from] & epMask)
             {
-                int capturedSquare = (side == WHITE) ? enpassant - 8 : enpassant + 8;
-                AddMove(list, (Move){piece, from, enpassant, -1, DetectCapture(capturedSquare), FLAG_ENPASSANT});
+                int capPawn = (side == WHITE) ? p : P;
+                list->moves[list->count].prevEnpassant = enpassant;
+                AddMove(list, (Move){piece, from, enpassant, -1, capPawn, FLAG_ENPASSANT, enpassant});
             }
         }
 
@@ -119,48 +117,66 @@ void GenerateKnightMoves(U64 knights, U64 ownPieces, U64 enemyPieces, int piece,
 
 void GenerateKingMoves(U64 king, U64 ownPieces, U64 enemyPieces, int piece, MoveList *list)
 {
-    if (!king)
-        return;
+    if (!king) return;
 
-    int from = __builtin_ctzll(king);           // get current king position
-    U64 moves = kingAttacks[from] & ~ownPieces; // get potential moves
+    int from = __builtin_ctzll(king);
+    int enemy = (piece == K) ? BLACK : WHITE;
 
-    // process normal moves
+    U64 enemyAttacks = GenerateAllAttacks(enemyPieces, occupied, enemy);   // get current enemy attacks
+    U64 moves = kingAttacks[from] & ~ownPieces & ~enemyAttacks;            // mask
+
+    // Normal king moves
     while (moves)
     {
-        int to = __builtin_ctzll(moves);                                 // get current possible move position
-        int captured = DetectCapture(to);                                // detect if there is piece on it
-        AddMove(list, (Move){piece, from, to, -1, captured, FLAG_NONE}); // add to move list
-        moves &= (moves - 1);                                            // pop LSB
+        int to = __builtin_ctzll(moves);
+        int captured = DetectCapture(to);
+        AddMove(list, (Move){piece, from, to, -1, captured, FLAG_NONE});
+        moves &= moves - 1;
     }
 
-    // handle castling
-    if (piece == K)
+    // Castling
+    if (piece == K) // White king
     {
-        // kingside white
-        if ((castle & (1 << 0)) && !(occupied & ((1ULL << 5) | (1ULL << 6))))
+        // Kingside
+        if (castle & 1) // K
         {
-            AddMove(list, (Move){piece, from, 6, -1, -1, FLAG_CASTLE_KINGSIDE});
+            if (!GetBit(occupied, 5) && !GetBit(occupied, 6) &&
+                !IsSquareAttacked(4, BLACK) && !IsSquareAttacked(5, BLACK) && !IsSquareAttacked(6, BLACK))
+            {
+                AddMove(list, (Move){K, 4, 6, -1, -1, FLAG_CASTLE_KINGSIDE});
+            }
         }
 
-        // queenside white
-        if ((castle & (1 << 1)) && !(occupied & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
+        // Queenside
+        if (castle & (1 << 1)) // Q
         {
-            AddMove(list, (Move){piece, from, 2, -1, -1, FLAG_CASTLE_QUEENSIDE});
+            if (!GetBit(occupied, 1) && !GetBit(occupied, 2) && !GetBit(occupied, 3) &&
+                !IsSquareAttacked(4, BLACK) && !IsSquareAttacked(3, BLACK) && !IsSquareAttacked(2, BLACK))
+            {
+                AddMove(list, (Move){K, 4, 2, -1, -1, FLAG_CASTLE_QUEENSIDE});
+            }
         }
     }
-    else if (piece == k)
+    else if (piece == k) // Black king
     {
-        // kingside black
-        if ((castle & (1 << 2)) && !(occupied & ((1ULL << 61) | (1ULL << 62))))
+        // Kingside
+        if (castle & (1 << 2)) // k
         {
-            AddMove(list, (Move){piece, from, 62, -1, -1, FLAG_CASTLE_KINGSIDE});
+            if (!GetBit(occupied, 61) && !GetBit(occupied, 62) &&
+                !IsSquareAttacked(60, WHITE) && !IsSquareAttacked(61, WHITE) && !IsSquareAttacked(62, WHITE))
+            {
+                AddMove(list, (Move){k, 60, 62, -1, -1, FLAG_CASTLE_KINGSIDE});
+            }
         }
 
-        // queenside black
-        if ((castle & (1 << 3)) && !(occupied & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))))
+        // Queenside
+        if (castle & (1 << 3)) // q
         {
-            AddMove(list, (Move){piece, from, 58, -1, -1, FLAG_CASTLE_QUEENSIDE});
+            if (!GetBit(occupied, 57) && !GetBit(occupied, 58) && !GetBit(occupied, 59) &&
+                !IsSquareAttacked(60, WHITE) && !IsSquareAttacked(59, WHITE) && !IsSquareAttacked(58, WHITE))
+            {
+                AddMove(list, (Move){k, 60, 58, -1, -1, FLAG_CASTLE_QUEENSIDE});
+            }
         }
     }
 }
@@ -272,35 +288,21 @@ void AddMove(MoveList *list, Move m)
     }
 }
 
-// Check if king is in check by enemy pieces
-int IsInCheck()
+int IsSquareAttacked(int sq, int bySide)
 {
-    int enemySide = side ^ 1;
-    int kingSq = __builtin_ctzll(bitboards[side == WHITE ? K : k]);
-
-    // Check pawn attacks
-    if (pawnAttacks[enemySide][kingSq] & bitboards[enemySide == WHITE ? P : p])
+    if (pawnAttacks[bySide][sq] & bitboards[bySide == WHITE ? P : p])
         return 1;
 
-    // Check knight attacks
-    if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n])
+    if (knightAttacks[sq] & bitboards[bySide == WHITE ? N : n])
         return 1;
 
-    // Check king attacks
-    if (kingAttacks[kingSq] & bitboards[enemySide == WHITE ? K : k])
+    if (GetRookAttacks(sq, occupied) & (bitboards[bySide == WHITE ? R : r] | bitboards[bySide == WHITE ? Q : q]))
         return 1;
 
-    // Check rook / queen attacks along orthogonals
-    U64 rookBB = bitboards[enemySide == WHITE ? R : r] | bitboards[enemySide == WHITE ? Q : q];
-    if (GetRookAttacks(kingSq, occupied) & rookBB)
+    if (GetBishopAttacks(sq, occupied) & (bitboards[bySide == WHITE ? B : b] | bitboards[bySide == WHITE ? Q : q]))
         return 1;
 
-    // Check bishop / queen attacks along diagonals
-    U64 bishopBB = bitboards[enemySide == WHITE ? B : b] | bitboards[enemySide == WHITE ? Q : q];
-    if (GetBishopAttacks(kingSq, occupied) & bishopBB)
-        return 1;
-
-    return 0; // king is safe
+    return 0;
 }
 
 // Reset Move List and Move Count
@@ -330,6 +332,52 @@ void GenerateMoves(MoveList *list)
     else
     {
         GenerateMovesInternal(bitboards[p], bitboards[n], bitboards[b], bitboards[r], bitboards[q], bitboards[k], blackPieces, whitePieces, side, list); // black
+    }
+}
+
+int IsKingInCheck(int checkSide)
+{
+    int enemySide = checkSide ^ 1;
+    int kingSq = __builtin_ctzll(bitboards[checkSide == WHITE ? K : k]);
+
+    if (pawnAttacks[enemySide][kingSq] & bitboards[enemySide == WHITE ? P : p]) 
+        return 1;
+
+    if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n]) 
+        return 1;
+
+    if (GetRookAttacks(kingSq, occupied) & (bitboards[enemySide == WHITE ? R : r] | bitboards[enemySide == WHITE ? Q : q])) 
+        return 1;
+
+    if (GetBishopAttacks(kingSq, occupied) & (bitboards[enemySide == WHITE ? B : b] | bitboards[enemySide == WHITE ? Q : q])) 
+        return 1;
+
+    return 0;
+}
+
+void GenerateLegalMoves(MoveList *legal)
+{
+    MoveList pseudo;
+    GenerateMoves(&pseudo);
+
+    ResetMoveList(legal);
+
+    for (int i = 0; i < pseudo.count; i++)
+    {
+        // make ith pseudo-legal move
+        MakeMove(&pseudo, i);
+
+        // check the side that just moved
+        int movedSide = side ^ 1;
+
+        // check if it is a legal move
+        if (!IsKingInCheck(movedSide))
+        {
+            AddMove(legal, pseudo.moves[i]);
+        }
+
+        // undo same move
+        UndoMove(&pseudo, i);
     }
 }
 

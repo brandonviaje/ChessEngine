@@ -20,5 +20,6 @@ U64 GetRookAttacks(int square, U64 blockers);
 U64 GetBishopAttacks(int square, U64 blockers);
 U64 GetQueenAttacks(int square, U64 blockers);
 void InitAttacks();
+U64 GenerateAllAttacks(U64 enemyPieces, U64 occupied, int enemy);
 
 #endif

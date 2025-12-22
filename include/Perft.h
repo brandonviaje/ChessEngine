@@ -6,4 +6,5 @@
 #include "MoveGen.h"
 
 U64 Perft(int depth);
+void PerftDivide(int depth);
 #endif

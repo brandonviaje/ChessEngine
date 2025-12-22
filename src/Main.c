@@ -4,12 +4,11 @@ int main()
 {
     InitAttacks();
     ParseFEN(starting_position);
-    
-    for (int depth = 1; depth <= 4; depth++) {
-        U64 nodes = Perft(depth);
-        printf("Perft depth %d: %llu nodes\n", depth, nodes);
+    PrintBitBoard(occupied);
+    for(int i = 0 ; i <= 6; i++){
+        U64 nodes = Perft(i);
+        printf("Depth %d Total Nodes: %llu \n", i, nodes);
     }
-    
     CleanupMagic();
     return 0;
 }

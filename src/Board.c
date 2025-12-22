@@ -68,6 +68,24 @@ int CharToPiece(char c)
     }
 }
 
+char PieceToChar(int piece) {
+    switch(piece) {
+        case P: return 'P';
+        case N: return 'N';
+        case B: return 'B';
+        case R: return 'R';
+        case Q: return 'Q';
+        case K: return 'K';
+        case p: return 'p';
+        case n: return 'n';
+        case b: return 'b';
+        case r: return 'r';
+        case q: return 'q';
+        case k: return 'k';
+        default: return '?';
+    }
+}
+
 // Set Piece on square
 void SetPiece(int piece, int square)
 {
@@ -166,21 +184,13 @@ void ParseFEN(char *FEN)
     // Castling rights
     for (int j = 0; j < strlen(fields[2]); j++)
     {
-        // bitmask to determine current castling rights
+        // determine current castling rights
         switch (fields[2][j])
         {
-        case 'K':
-            castle |= 1 << 0;
-            break; // White kingside
-        case 'Q':
-            castle |= 1 << 1;
-            break; // White queenside
-        case 'k':
-            castle |= 1 << 2;
-            break; // Black kingside
-        case 'q':
-            castle |= 1 << 3;
-            break; // Black queenside
+            case 'K': castle |= WHITE_CASTLE_K; break;
+            case 'Q': castle |= WHITE_CASTLE_Q; break;
+            case 'k': castle |= BLACK_CASTLE_K; break;
+            case 'q': castle |= BLACK_CASTLE_Q; break;
         }
     }
 
@@ -226,6 +236,9 @@ void MakeMove(MoveList *list, int index)
     // Create bit mask of from and to square
     U64 fromMask = 1ULL << from;
     U64 toMask = 1ULL << to;
+    list->moves[index].prevCastle = castle;
+    list->moves[index].prevEnpassant = enpassant;
+    enpassant = -1;
 
     switch (moveFlag)
     {
@@ -274,24 +287,7 @@ void MakeMove(MoveList *list, int index)
     case FLAG_DOUBLE_PUSH:
     {
         MovePiece(piece, fromMask, toMask);
-
-        // check if move made is a capture
-        if (captured != -1)
-        {
-            // remove captured piece from its bitboard
-            bitboards[captured] &= ~toMask;
-
-            // Update corresponding captured pieces bitboard
-            if (captured <= K)
-            {
-                whitePieces &= ~toMask;
-            }
-            else
-            {
-                blackPieces &= ~toMask;
-            }
-            enpassant = side == WHITE ? to - 8 : to + 8; // set enpassant square
-        }
+        enpassant = side == WHITE ? to - 8 : to + 8; // set enpassant square
         break;
     }
 
@@ -303,17 +299,14 @@ void MakeMove(MoveList *list, int index)
         // remove captured piece from its bitboard: behind the pawn that just moved
         int capturedSquare = side == WHITE ? to - 8 : to + 8;
         U64 capturedMask = 1ULL << capturedSquare;
-        bitboards[captured] &= ~capturedMask;
+        int capPawn = (side == WHITE) ? p : P;
+        bitboards[capPawn] &= ~capturedMask;
 
         // Update corresponding bitboards
-        if (captured <= K)
-        {
-            whitePieces &= ~capturedMask;
-        }
-        else
-        {
+        if (side == WHITE)
             blackPieces &= ~capturedMask;
-        }
+        else
+            whitePieces &= ~capturedMask;
 
         occupied &= ~capturedMask;
         break;
@@ -378,6 +371,7 @@ void MakeMove(MoveList *list, int index)
         break;
     }
     }
+    UpdateCastlingRights(piece, from, to, captured);
     side ^= 1; // flip sides
 }
 
@@ -411,6 +405,8 @@ void UndoMove(MoveList *list, int index)
     // bitmasks of from and to squares
     U64 fromMask = 1ULL << from;
     U64 toMask = 1ULL << to;
+    enpassant = list->moves[index].prevEnpassant;
+    castle = list->moves[index].prevCastle;
 
     switch (moveFlag)
     {
@@ -457,9 +453,7 @@ void UndoMove(MoveList *list, int index)
     case FLAG_DOUBLE_PUSH:
     {
         MovePiece(piece, toMask, fromMask); // move piece back
-        if (captured != -1)
-            RestorePiece(captured, toMask); // restore captured piece
-        enpassant = -1;
+        enpassant = list->moves[index].prevEnpassant;
         break;
     }
 
@@ -468,7 +462,8 @@ void UndoMove(MoveList *list, int index)
         MovePiece(piece, toMask, fromMask);                       // Move pawn back
         int capturedSquare = prevSide == WHITE ? to - 8 : to + 8; // get captured square
         U64 capturedMask = 1ULL << capturedSquare;
-        RestorePiece(captured, capturedMask); // restore captured piece
+        int capPawn = (prevSide == WHITE) ? p : P;
+        RestorePiece(capPawn, capturedMask);
         break;
     }
 
@@ -526,7 +521,7 @@ void MovePiece(int piece, U64 fromMask, U64 toMask)
     occupied |= toMask;
 }
 
-// Restore a piece to a square
+// restore a piece to a square
 void RestorePiece(int piece, U64 mask)
 {
     bitboards[piece] |= mask; // set bitboard using that mask
@@ -537,4 +532,41 @@ void RestorePiece(int piece, U64 mask)
     else
         blackPieces |= mask;
     occupied |= mask;
+}
+
+// update castling rights after a move
+void UpdateCastlingRights(int piece, int from, int to, int captured)
+{
+    // king moves remove both castling rights for that side
+    if (piece == K) 
+        castle &= ~(WHITE_CASTLE_K | WHITE_CASTLE_Q);
+    else if (piece == k) 
+        castle &= ~(BLACK_CASTLE_K | BLACK_CASTLE_Q);
+
+    // rook moves
+    if (piece == R) {
+        if (from == 0) 
+            castle &= ~WHITE_CASTLE_Q;
+        else if (from == 7) 
+            castle &= ~WHITE_CASTLE_K;
+    } else if (piece == r) {
+        if (from == 56) 
+            castle &= ~BLACK_CASTLE_Q;
+        else if (from == 63) 
+            castle &= ~BLACK_CASTLE_K;
+    }
+
+    // rook captures
+    if (captured == R) {
+        if (to == 0) 
+            castle &= ~WHITE_CASTLE_Q;
+        else if (to == 7) 
+            castle &= ~WHITE_CASTLE_K;
+    } else if (captured == r) {
+        if (to == 56) 
+            castle &= ~BLACK_CASTLE_Q;
+        else if (to == 63) 
+            castle &= ~BLACK_CASTLE_K;
+    }
+
 }

@@ -22,6 +22,10 @@
 #define FLAG_DOUBLE_PUSH 5
 #define WHITE 0
 #define BLACK 1
+#define WHITE_CASTLE_K 1  
+#define WHITE_CASTLE_Q 2  
+#define BLACK_CASTLE_K 4  
+#define BLACK_CASTLE_Q 8  
 
 // Macros
 #define SetBit(board, square) ((board) |= (1ULL << (square)))
@@ -39,6 +43,8 @@ typedef struct
     int promotion; // piece type of promotted piece
     int captured;  // piece type of captured piece
     int flags;     // handles special moves
+    int prevEnpassant;
+    int prevCastle;
 } Move;
 
 typedef enum

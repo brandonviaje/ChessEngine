@@ -52,10 +52,12 @@ U64 GetBlockerFromIndex(int index, U64 mask)
 
     for (int i = 0; i < bits; i++)
     {
-        int bitPos = __builtin_ctzll(mask); // least significant set bit
-        if (index & (1ULL << i))
-            SetBit(blockers, bitPos);
-        mask &= (mask - 1); // pop LSB
+        int bitPos = __builtin_ctzll(mask);
+        
+        if (index & (1 << i))
+            blockers |= (1ULL << bitPos);
+
+        mask &= mask - 1;
     }
 
     return blockers;

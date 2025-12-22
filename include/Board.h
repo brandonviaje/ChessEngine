@@ -30,5 +30,6 @@ void MakeMove(MoveList *list, int index);
 void UndoMove(MoveList *list, int index);
 void MovePiece(int piece, U64 fromMask, U64 toMask);
 void RestorePiece(int piece, U64 mask);
+void UpdateCastlingRights(int piece, int from, int to, int captured);
 
 #endif

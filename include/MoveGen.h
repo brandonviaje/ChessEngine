@@ -27,6 +27,7 @@ int DetectCapture(int to);
 void AddPromotionMoves(int from, int to, int captured, int side, MoveList *list);
 void AddMove(MoveList *list, Move m);
 void PrintMoveList(MoveList *list);
-int IsInCheck();
-
+int IsSquareAttacked(int sq, int bySide);
+int IsKingInCheck(int checkSide);
+void GenerateLegalMoves(MoveList *legal);
 #endif

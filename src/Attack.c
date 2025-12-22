@@ -122,3 +122,55 @@ void InitAttacks()
     InitKnightAttacks();
     InitMagic();
 }
+
+// Generate all squares attacked by enemy = WHITE or BLACK
+U64 GenerateAllAttacks(U64 enemyPieces, U64 occupied, int enemy)
+{
+    U64 attacks = 0ULL;
+
+    // pawns attacks
+    U64 pawns = enemyPieces & ((enemy == WHITE) ? bitboards[P] : bitboards[p]);
+    while (pawns)
+    {
+        int sq = __builtin_ctzll(pawns);
+        attacks |= pawnAttacks[enemy == WHITE ? 0 : 1][sq]; // add pawn attacks
+        pawns &= pawns - 1; // pop pawn
+    }
+
+    // knights attacks
+    U64 knights = enemyPieces & ((enemy == WHITE) ? bitboards[N] : bitboards[n]);
+    while (knights)
+    {
+        int sq = __builtin_ctzll(knights);
+        attacks |= knightAttacks[sq]; // add knight attacks
+        knights &= knights - 1; // pop knight
+    }
+
+    // bishops and queens attacks
+    U64 bishops = enemyPieces & ((enemy == WHITE) ? (bitboards[B] | bitboards[Q]) : (bitboards[b] | bitboards[q]));
+    while (bishops)
+    {
+        int sq = __builtin_ctzll(bishops);
+        attacks |= GetBishopAttacks(sq, occupied); // sliding attacks
+        bishops &= bishops - 1; // pop bishop/queen
+    }
+
+    // rooks and queens attacks
+    U64 rooks = enemyPieces & ((enemy == WHITE) ? (bitboards[R] | bitboards[Q]) : (bitboards[r] | bitboards[q]));
+    while (rooks)
+    {
+        int sq = __builtin_ctzll(rooks);
+        attacks |= GetRookAttacks(sq, occupied); // sliding attacks
+        rooks &= rooks - 1; // pop rook/queen
+    }
+
+    // king attacks
+    U64 king = enemyPieces & ((enemy == WHITE) ? bitboards[K] : bitboards[k]);
+    if (king)
+    {
+        int sq = __builtin_ctzll(king);
+        attacks |= kingAttacks[sq]; // king moves
+    }
+
+    return attacks; // return all squares under attack
+}
