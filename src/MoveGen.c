@@ -342,7 +342,7 @@ int IsKingInCheck(int checkSide)
     int enemySide = checkSide ^ 1;
     int kingSq = __builtin_ctzll(bitboards[checkSide == WHITE ? K : k]);
 
-    if (pawnAttacks[enemySide][kingSq] & bitboards[enemySide == WHITE ? P : p])
+    if (pawnAttacks[checkSide][kingSq] & bitboards[enemySide == WHITE ? P : p])
         return 1;
 
     if (knightAttacks[kingSq] & bitboards[enemySide == WHITE ? N : n])

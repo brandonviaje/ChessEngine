@@ -337,20 +337,6 @@ void MakeMove(MoveList *list, int index)
 
     case FLAG_PROMOTION:
     {
-        bitboards[piece] &= ~fromMask;      // remove piece using fromMask
-        bitboards[promotedPiece] |= toMask; // set promoted piece using toMask
-
-        // Update the corresponding color bitboard
-        if (promotedPiece <= K)
-        {
-            whitePieces &= ~fromMask;
-            whitePieces |= toMask;
-        }
-        else
-        {
-            blackPieces &= ~fromMask;
-            blackPieces |= toMask;
-        }
 
         // Check if the move made is a capture
         if (captured != -1)
@@ -367,13 +353,29 @@ void MakeMove(MoveList *list, int index)
             {
                 blackPieces &= ~toMask;
             }
+            occupied &= ~toMask;
         }
+
+        bitboards[piece] &= ~fromMask;      // remove piece using fromMask
+        bitboards[promotedPiece] |= toMask; // set promoted piece using toMask
+
+        // Update the corresponding color bitboard
+        if (promotedPiece <= K)
+        {
+            whitePieces &= ~fromMask;
+            whitePieces |= toMask;
+        }
+        else
+        {
+            blackPieces &= ~fromMask;
+            blackPieces |= toMask;
+        }
+
         break;
     }
 
     default:
     {
-        MovePiece(piece, fromMask, toMask);
 
         // check if move made is a capture
         if (captured != -1)
@@ -390,7 +392,10 @@ void MakeMove(MoveList *list, int index)
             {
                 blackPieces &= ~toMask;
             }
+            occupied &= ~toMask;
         }
+
+        MovePiece(piece, fromMask, toMask);
         break;
     }
     }

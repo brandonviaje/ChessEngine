@@ -3,9 +3,13 @@
 int main()
 {
     InitAttacks();
-    ParseFEN("rnbq1bnr/pppkpppp/3pP3/8/8/8/PPPP1PPP/RNBQKBNR b KQ - 0 3");
+    ParseFEN(kiwipete);
     PrintBitBoard(occupied);
-    PerftDivide(1);
+    for (int i = 0; i <= 4; i++)
+    {
+        U64 nodes = Perft(i);
+        printf("Depth %d Total Nodes: %llu \n", i, nodes);
+    }
     CleanupMagic();
     return 0;
 }
