@@ -355,22 +355,17 @@ void MakeMove(MoveList *list, int index)
             }
             occupied &= ~toMask;
         }
+        // remove pawn from from-square
+        bitboards[piece] &= ~fromMask;
+        occupied &= ~fromMask;
 
-        bitboards[piece] &= ~fromMask;      // remove piece using fromMask
-        bitboards[promotedPiece] |= toMask; // set promoted piece using toMask
-
-        // Update the corresponding color bitboard
-        if (promotedPiece <= K)
-        {
+        if (piece <= K)
             whitePieces &= ~fromMask;
-            whitePieces |= toMask;
-        }
         else
-        {
             blackPieces &= ~fromMask;
-            blackPieces |= toMask;
-        }
 
+        // place promoted piece
+        RestorePiece(promotedPiece, toMask);
         break;
     }
 
@@ -498,18 +493,14 @@ void UndoMove(MoveList *list, int index)
     case FLAG_PROMOTION:
     {
         bitboards[promotedPiece] &= ~toMask; // remove promoted piece
-        bitboards[piece] |= fromMask;        // restore pawn
+        occupied &= ~toMask;
 
-        if (piece <= K)
-        {
+        if (promotedPiece <= K)
             whitePieces &= ~toMask;
-            whitePieces |= fromMask;
-        }
         else
-        {
             blackPieces &= ~toMask;
-            blackPieces |= fromMask;
-        }
+
+        RestorePiece(piece, fromMask); // restore pawn
 
         if (captured != -1)
             RestorePiece(captured, toMask); // restore captured piece
