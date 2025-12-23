@@ -292,8 +292,30 @@ void AddMove(MoveList *list, Move m)
 
 int IsSquareAttacked(int sq, int bySide)
 {
-    if (pawnAttacks[bySide][sq] & bitboards[bySide == WHITE ? P : p])
-        return 1;
+    if (bySide == WHITE)
+    {
+        
+        U64 attackers = 0;  // Squares from which a white pawn could attack current square
+        if ((sq & 0xF) != 0) // not on file a
+            attackers |= 1ULL << (sq - 9); // white pawn attacks from left diagonal
+        if ((sq & 0xF) != 7) // not on file h
+            attackers |= 1ULL << (sq - 7); // white pawn attacks from right diagonal
+
+        if (attackers & bitboards[P])
+            return 1;
+    }
+    else
+    {
+        
+        U64 attackers = 0;      // squares from where a black pawn could attack current square
+        if ((sq & 0xF) != 0)                 // not on file a
+            attackers |= 1ULL << (sq + 7); // black pawn attacks from left diagonal
+        if ((sq & 0xF) != 7)                // not on file h
+            attackers |= 1ULL << (sq + 9); // black pawn attacks from right diagonal
+
+        if (attackers & bitboards[p])
+            return 1;
+    }
 
     if (knightAttacks[sq] & bitboards[bySide == WHITE ? N : n])
         return 1;
