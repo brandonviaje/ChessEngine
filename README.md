@@ -68,6 +68,7 @@ Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/b
 * [Best Magics So Far](https://www.chessprogramming.org/Best_Magics_so_far)
 * [Chess Move Generation with Magic Bitboards](https://essays.jwatzman.org/essays/chess-move-generation-with-magic-bitboards.html)
 * [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
+* [LiChess Open Database](https://database.lichess.org/)
 * [Magic Bitboards](https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks#Magic_Bitboards)
 * [Minimax Algorithm](https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence/)
 * [Move Generation with Bitboards](https://libres.uncg.edu/ir/asu/f/Columbia_Sophie_Spring%202023_thesis.pdf)
@@ -76,4 +77,5 @@ Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/b
 <!-- MARKDOWN LINKS & IMAGES -->
 [C]: https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/C_Programming_Language.svg/926px-C_Programming_Language.svg.png
 [C-url]: https://www.c-language.org/
+
 
