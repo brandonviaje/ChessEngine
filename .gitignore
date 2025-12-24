@@ -1,3 +1,6 @@
 .vscode/
 chess_engine
 build/
+__pycache__/
+chessData.csv
+training_data/
