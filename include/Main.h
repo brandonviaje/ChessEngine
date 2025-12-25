@@ -1,10 +1,11 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "MyTypes.h"
 #include "Attack.h"
-#include "MoveGen.h"
 #include "Board.h"
+#include "MoveGen.h"
+#include "MyTypes.h"
+#include "NNUE.h"
 #include "Perft.h"
 
 #endif

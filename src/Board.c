@@ -68,39 +68,6 @@ int CharToPiece(char c)
     }
 }
 
-char PieceToChar(int piece)
-{
-    switch (piece)
-    {
-    case P:
-        return 'P';
-    case N:
-        return 'N';
-    case B:
-        return 'B';
-    case R:
-        return 'R';
-    case Q:
-        return 'Q';
-    case K:
-        return 'K';
-    case p:
-        return 'p';
-    case n:
-        return 'n';
-    case b:
-        return 'b';
-    case r:
-        return 'r';
-    case q:
-        return 'q';
-    case k:
-        return 'k';
-    default:
-        return '?';
-    }
-}
-
 // Set Piece on square
 void SetPiece(int piece, int square)
 {
@@ -230,6 +197,26 @@ void ParseFEN(char *FEN)
     halfmove = atoi(fields[4]); // Halfmove clock
     fullmove = atoi(fields[5]); // Fullmove number
     free(fen_copy);             // dealloc memory
+}
+
+void BitboardsToVector(U64 bitboards[12], float x[768]) 
+{
+    for (int i = 0; i < 768; i++) x[i] = 0.0f;
+
+    for (int piece = 0; piece < 12; piece++) 
+    {
+        // get bitboard for this piece
+        U64 bb = bitboards[piece];
+
+        // process all bits in bb
+        while (bb) 
+        {
+            int sq = __builtin_ctzll(bb); // index of least-significant 1
+            bb &= bb - 1;                 // clear that bit
+            int idx = piece*64 + sq;
+            x[idx] = 1.0f;
+        }
+    }
 }
 
 // Make Move Function
