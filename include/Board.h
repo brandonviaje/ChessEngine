@@ -25,7 +25,6 @@ int CharToPiece(char c);
 void SetPiece(int piece, int square);
 void PrintBitBoard(U64 board);
 void ParseFEN(char *FEN);
-void BitboardsToVector(U64 bitboards[12], float x[768]);
 void MakeMove(MoveList *list, int index);
 void UndoMove(MoveList *list, int index);
 void MovePiece(int piece, U64 fromMask, U64 toMask);
