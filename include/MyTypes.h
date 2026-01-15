@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <time.h>
 
 // FEN Notation
 #define starting_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

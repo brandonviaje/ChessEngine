@@ -22,6 +22,7 @@ SRCS = $(SRC_DIR)/Board.c \
 	   $(SRC_DIR)/Search.c \
 	   $(SRC_DIR)/uci.c \
 	   $(SRC_DIR)/Zobrist.c \
+	   $(SRC_DIR)/Transposition.c \
        $(TEST_DIR)/Perft.c
 
 # Object files placed under build
