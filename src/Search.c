@@ -12,11 +12,10 @@ void ClearSearch()
 int AlphaBeta(int alpha, int beta, int depth)
 {
 
-    // base case: if depth is 0, return eval
+    // base case: if depth is 0, enter quiescence search
     if (depth == 0)
     {
-        info.nodes++;
-        return Evaluate();
+        return Quiescence(alpha, beta);
     }
 
     info.nodes++; // count this node
@@ -136,4 +135,67 @@ void SearchPosition(int depth)
     char r2 = '1' + (bestMove.to / 8);
 
     printf("Best Move: %c%c%c%c\n", f1, r1, f2, r2);
+}
+
+int Quiescence(int alpha, int beta)
+{
+    info.nodes++;
+
+    int score = Evaluate();
+
+    // if score way better than what opponent would accept, return
+    if (score >= beta)
+    {
+        return beta;
+    }
+
+    // if position is better than anything we've seen, keep
+    if (score > alpha)
+    {
+        alpha = score;
+    }
+
+    MoveList list;
+    GenerateMoves(&list);
+
+    for (int i = 0; i < list.count; i++)
+    {
+
+        Move m = list.moves[i];
+
+        // only look at captures!
+        if (m.captured == -1 && !(m.flags & FLAG_PROMOTION))
+        {
+            continue;
+        }
+
+        MakeMove(&list, i);
+
+        // check legality
+        int movedSide = side ^ 1;
+        if (IsKingInCheck(movedSide))
+        {
+            UndoMove(&list, i);
+            continue;
+        }
+
+        // call quiscence again
+        int tempScore = -Quiescence(-beta, -alpha);
+
+        UndoMove(&list, i);
+
+        // beta cutoff
+        if (tempScore >= beta)
+        {
+            return beta;
+        }
+
+        // alpha update
+        if (tempScore > alpha)
+        {
+            alpha = tempScore;
+        }
+    }
+
+    return alpha;
 }

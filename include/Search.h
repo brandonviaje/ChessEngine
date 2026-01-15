@@ -21,5 +21,6 @@ extern S_SEARCHINFO info;
 void ClearSearch();
 int AlphaBeta(int alpha, int beta, int depth);
 void SearchPosition(int depth);
+int Quiescence(int alpha, int beta);
 
 #endif
