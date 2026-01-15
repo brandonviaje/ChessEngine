@@ -20,6 +20,7 @@
 
 // Color & Move Types
 #define MAX_MOVES 256
+#define MAX_PLY 64
 #define FLAG_NONE 0
 #define FLAG_ENPASSANT 1
 #define FLAG_CASTLE_KINGSIDE 2

@@ -2,90 +2,84 @@
 
 S_SEARCHINFO info;
 
+// killer moves table, used for move ordering to try and trigger beta cutoffs faster
+Move killerMoves[MAX_PLY][2];
+
 void ClearSearch()
 {
+    // reset search info and clear killer moves before we start
     info.nodes = 0;
     info.quit = 0;
+    memset(killerMoves, 0, sizeof(killerMoves));
 }
 
-// alpha beta search
 int AlphaBeta(int alpha, int beta, int depth)
 {
-
-    // base case: if depth is 0, enter quiescence search
+    // if we hit depth 0, drop into quiescence search instead
     if (depth == 0)
-    {
         return Quiescence(alpha, beta);
-    }
 
-    info.nodes++; // count this node
+    info.nodes++; // count nodes for stats
 
-    // generate pesudo legal moves
     MoveList list;
-    GenerateMoves(&list);
+    GenerateMoves(&list); // generate all moves for this position
 
     int legalMoves = 0;
     int score = -INF;
 
-    // loop through all moves
+    // fetch killer moves for this depth to help ordering
+    Move k1 = {0}, k2 = {0};
+    if (depth < MAX_PLY)
+    {
+        k1 = killerMoves[depth][0];
+        k2 = killerMoves[depth][1];
+    }
+
     for (int i = 0; i < list.count; i++)
     {
+        // move picker uses killers to try better moves first
+        PickNextMove(&list, i, k1, k2);
 
-        // make move
+        Move m = list.moves[i];
         MakeMove(&list, i);
 
-        // check if move was legal
         int movedSide = side ^ 1;
-
         if (IsKingInCheck(movedSide))
         {
-            UndoMove(&list, i); // illegal move, undo
-            continue;           // Skip to next move
+            UndoMove(&list, i);
+            continue; // skip illegal moves
         }
 
         legalMoves++;
-
-        // flip board and search deeper
         score = -AlphaBeta(-beta, -alpha, depth - 1);
-
-        // take move back
         UndoMove(&list, i);
 
-        // pruning
+        // beta cutoff
         if (score >= beta)
         {
-            return beta; // beta Cutoff
+            // store killer moves if it's not a capture
+            if (m.captured == -1 && depth < MAX_PLY)
+            {
+                killerMoves[depth][1] = killerMoves[depth][0];
+                killerMoves[depth][0] = m;
+            }
+            return beta;
         }
 
         if (score > alpha)
-        {
-            alpha = score; // found a better move
-        }
+            alpha = score; // best so far
     }
 
-    // look for checkmate / stalemate
     if (legalMoves == 0)
-    {
-        // if no moves, check if we are in check
-        if (IsKingInCheck(side))
-        {
-            return -MATE + (10 - depth); // checkmate
-        }
-        else
-        {
-            return 0; // stalemate
-        }
-    }
+        return IsKingInCheck(side) ? -MATE + (10 - depth) : 0;
 
     return alpha;
 }
 
-// root search
 void SearchPosition(int depth)
 {
     ClearSearch();
 
-    // best move tracking
     Move bestMove = {0};
     int bestScore = -INF;
     int currentScore = 0;
@@ -97,12 +91,13 @@ void SearchPosition(int depth)
 
     printf("Thinking to depth %d...\n", depth);
 
+    Move k1 = {0}, k2 = {0}; // dummy killers for root
+
     for (int i = 0; i < list.count; i++)
     {
-        // make move
+        PickNextMove(&list, i, k1, k2);
         MakeMove(&list, i);
 
-        // check if legal move
         int movedSide = side ^ 1;
         if (IsKingInCheck(movedSide))
         {
@@ -110,10 +105,7 @@ void SearchPosition(int depth)
             continue;
         }
 
-        // search
         currentScore = -AlphaBeta(-beta, -alpha, depth - 1);
-
-        // backtrack and explore more
         UndoMove(&list, i);
 
         if (currentScore > bestScore)
@@ -124,54 +116,44 @@ void SearchPosition(int depth)
         }
     }
 
-    printf("Search Depth: %d\n", depth);
-    printf("Nodes visited: %ld\n", info.nodes);
-    printf("Best Score: %d (centipawns)\n", bestScore);
+    printf("search depth: %d\n", depth);
+    printf("nodes visited: %ld\n", info.nodes);
+    printf("best score: %d (centipawns)\n", bestScore);
 
-    // print best move
     char f1 = 'a' + (bestMove.from % 8);
     char r1 = '1' + (bestMove.from / 8);
     char f2 = 'a' + (bestMove.to % 8);
     char r2 = '1' + (bestMove.to / 8);
 
-    printf("Best Move: %c%c%c%c\n", f1, r1, f2, r2);
+    printf("best move: %c%c%c%c\n", f1, r1, f2, r2);
 }
 
 int Quiescence(int alpha, int beta)
 {
     info.nodes++;
 
-    int score = Evaluate();
+    int score = Evaluate(); // static eval first
 
-    // if score way better than what opponent would accept, return
     if (score >= beta)
-    {
         return beta;
-    }
-
-    // if position is better than anything we've seen, keep
     if (score > alpha)
-    {
         alpha = score;
-    }
 
     MoveList list;
     GenerateMoves(&list);
 
+    Move k1 = {0}, k2 = {0}; // no killers in q-search
+
     for (int i = 0; i < list.count; i++)
     {
-
+        PickNextMove(&list, i, k1, k2);
         Move m = list.moves[i];
 
-        // only look at captures!
         if (m.captured == -1 && !(m.flags & FLAG_PROMOTION))
-        {
-            continue;
-        }
+            continue; // skip quiet moves
 
         MakeMove(&list, i);
 
-        // check legality
         int movedSide = side ^ 1;
         if (IsKingInCheck(movedSide))
         {
@@ -179,22 +161,13 @@ int Quiescence(int alpha, int beta)
             continue;
         }
 
-        // call quiscence again
         int tempScore = -Quiescence(-beta, -alpha);
-
         UndoMove(&list, i);
 
-        // beta cutoff
         if (tempScore >= beta)
-        {
             return beta;
-        }
-
-        // alpha update
         if (tempScore > alpha)
-        {
             alpha = tempScore;
-        }
     }
 
     return alpha;

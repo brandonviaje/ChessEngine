@@ -6,6 +6,7 @@
 #include "Evaluate.h"
 #include "MyTypes.h"
 #include "Board.h"
+#include "MovePicker.h"
 
 #define INF 50000
 #define MATE 49000
