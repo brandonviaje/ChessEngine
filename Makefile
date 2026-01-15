@@ -18,6 +18,7 @@ SRCS = $(SRC_DIR)/Board.c \
 	   $(SRC_DIR)/Utils.c \
 	   $(SRC_DIR)/Evaluate.c \
 	   $(SRC_DIR)/PieceSquareTable.c \
+	   $(SRC_DIR)/Search.c \
        $(TEST_DIR)/Perft.c
 
 # Object files placed under build

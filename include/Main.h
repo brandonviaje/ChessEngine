@@ -7,5 +7,6 @@
 #include "MoveGen.h"
 #include "MyTypes.h"
 #include "Perft.h"
+#include "Search.h"
 
 #endif
