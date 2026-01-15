@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 // FEN Notation
 #define starting_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -27,10 +28,10 @@
 #define FLAG_DOUBLE_PUSH 5
 #define WHITE 0
 #define BLACK 1
-#define WHITE_CASTLE_K 1  
-#define WHITE_CASTLE_Q 2  
-#define BLACK_CASTLE_K 4  
-#define BLACK_CASTLE_Q 8  
+#define WHITE_CASTLE_K 1
+#define WHITE_CASTLE_Q 2
+#define BLACK_CASTLE_K 4
+#define BLACK_CASTLE_Q 8
 
 // Macros
 #define SetBit(board, square) ((board) |= (1ULL << (square)))
@@ -54,8 +55,18 @@ typedef struct
 
 typedef enum
 {
-    P,N,B,R,Q,K, // white
-    p,n,b,r,q,k // black
+    P,
+    N,
+    B,
+    R,
+    Q,
+    K, // white
+    p,
+    n,
+    b,
+    r,
+    q,
+    k // black
 } Pieces;
 
 #endif

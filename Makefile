@@ -14,8 +14,9 @@ SRCS = $(SRC_DIR)/Board.c \
 	   $(SRC_DIR)/Main.c \
        $(SRC_DIR)/MoveGen.c \
        $(SRC_DIR)/Attack.c \
-	   $(SRC_DIR)/NNUE.c \
        $(SRC_DIR)/Magic.c \
+	   $(SRC_DIR)/Evaluate.c \
+	   $(SRC_DIR)/PieceSquareTable.c \
        $(TEST_DIR)/Perft.c
 
 # Object files placed under build
