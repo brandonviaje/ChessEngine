@@ -2,25 +2,18 @@
 
 int main()
 {
-    // Init Engine
     InitAttacks();
     InitEvalMasks();
 
-    // test
-    printf("--- ENGINE TEST ---\n\n");
-    printf("TEST 1: Start Position (Depth 5)\n");
-    ParseFEN(starting_position);
-    PrintBitBoard(occupied);
-    SearchPosition(5);
-
-    printf("\n-----------------------------\n\n");
-    printf("TEST 2: Scholar's Mate Tactics (Depth 4)\n");
-    ParseFEN("r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 4 4");
+    printf("--- TIMED SEARCH TEST ---\n\n");
+    
+    // kiwipete position again
+    ParseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
     PrintBitBoard(occupied);
 
-    // best move is Qxf7 (Checkmate)
-    SearchPosition(4);
-    CleanupMagic();
+    // search max depth 99, but limit time to 1sec
+    printf("Searching for exactly 1 second...\n");
+    SearchPosition(150, 1000); 
 
     return 0;
 }
