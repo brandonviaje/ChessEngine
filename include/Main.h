@@ -9,5 +9,7 @@
 #include "Perft.h"
 #include "Search.h"
 #include "uci.h"
+#include "Zobrist.h"
+#include <time.h>
 
 #endif

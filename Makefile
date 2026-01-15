@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -g -Wall
+CFLAGS = -Wall -O3
 
 # Directories
 SRC_DIR = src
@@ -21,6 +21,7 @@ SRCS = $(SRC_DIR)/Board.c \
 	   $(SRC_DIR)/PieceSquareTable.c \
 	   $(SRC_DIR)/Search.c \
 	   $(SRC_DIR)/uci.c \
+	   $(SRC_DIR)/Zobrist.c \
        $(TEST_DIR)/Perft.c
 
 # Object files placed under build

@@ -3,6 +3,7 @@
 
 #include "MyTypes.h"
 #include "MoveGen.h"
+#include "Zobrist.h"
 
 // Piece bitboards
 extern U64 bitboards[12];
@@ -16,6 +17,7 @@ extern int enpassant;        // en passant square
 extern unsigned char castle; // castling rights
 extern int halfmove;         // halfmove clock
 extern int fullmove;         // fullmove number
+extern int castlePerm;
 
 typedef struct MoveList MoveList;
 
