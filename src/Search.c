@@ -5,23 +5,28 @@ S_SEARCHINFO info;
 Move killerMoves[MAX_PLY][2];
 
 // current time in ms (used for soft time control)
-int GetTimeMs() {
+int GetTimeMs()
+{
     struct timeval t;
     gettimeofday(&t, NULL);
     return t.tv_sec * 1000 + t.tv_usec / 1000;
 }
 
 // only check time every ~2k nodes to keep syscall overhead low
-void CheckTime() {
-    if (info.nodes % 2048 == 0) {
-        if (GetTimeMs() > info.stopTime) {
+void CheckTime()
+{
+    if (info.nodes % 2048 == 0)
+    {
+        if (GetTimeMs() > info.stopTime)
+        {
             info.stopped = 1;
         }
     }
 }
 
 // reset all per-search state
-void ClearSearch() {
+void ClearSearch()
+{
     info.nodes = 0;
     info.stopped = 0;
     info.startTime = GetTimeMs();
@@ -29,16 +34,32 @@ void ClearSearch() {
 }
 
 // main negamax alpha-beta
-int AlphaBeta(int alpha, int beta, int depth) {
+int AlphaBeta(int alpha, int beta, int depth)
+{
 
-    // check time limits
-    if ((info.nodes & 2047) == 0) 
+    // 1. Check time limits
+    if ((info.nodes & 2047) == 0)
         CheckTime();
-    if (info.stopped) 
+    if (info.stopped)
         return 0;
 
-    // leaf -> quiescence search
-    if (depth == 0) 
+    // 2. TRANSPOSITION TABLE READ (PROBE)
+
+    int score = -INF;
+    int ttMovePacked = 0; // Packed move from TT (from | to << 6)
+    int ttScore = -INF;
+
+    // Check if this position is in the hash table
+    // If ReadTT returns 1, we found a valid cutoff and return immediately.
+    if (ReadTT(positionKey, &ttMovePacked, &ttScore, alpha, beta, depth))
+    {
+        return ttScore;
+    }
+
+    // Note: even if we didn't return, ttMovePacked now holds the "Best Move"
+    // from a previous search. We will use this in PickNextMove later!
+
+    if (depth == 0)
         return Quiescence(alpha, beta);
 
     info.nodes++;
@@ -47,24 +68,27 @@ int AlphaBeta(int alpha, int beta, int depth) {
     GenerateMoves(&list);
 
     int legalMoves = 0;
-    int score = -INF;
+    int alphaOrig = alpha; // save original alpha to determine flag later
+    Move bestMove = {0};   // track best move for TT writing
 
-    // grab killer moves for this ply
+    // Grab killer moves
     Move k1 = {0}, k2 = {0};
-    if (depth < MAX_PLY) 
+    if (depth < MAX_PLY)
     {
         k1 = killerMoves[depth][0];
         k2 = killerMoves[depth][1];
     }
 
-    for (int i = 0; i < list.count; i++) 
+    for (int i = 0; i < list.count; i++)
     {
-        PickNextMove(&list, i, k1, k2);
+        // Future TODO: Pass ttMovePacked to PickNextMove here for sorting!
+        PickNextMove(&list, i, k1, k2, ttMovePacked);
+
         Move m = list.moves[i];
         MakeMove(&list, i);
 
-        // check for legality
-        if (IsKingInCheck(side ^ 1)) {
+        if (IsKingInCheck(side ^ 1))
+        {
             UndoMove(&list, i);
             continue;
         }
@@ -73,33 +97,64 @@ int AlphaBeta(int alpha, int beta, int depth) {
         score = -AlphaBeta(-beta, -alpha, depth - 1);
         UndoMove(&list, i);
 
-        if (info.stopped) return 0;
+        if (info.stopped)
+            return 0;
 
-        // beta cutoff -> store quiet killer
-        if (score >= beta) {
-            if (m.captured == -1 && depth < MAX_PLY) {
+        // Beta Cutoff
+        if (score >= beta)
+        {
+            // Store Killer
+            if (m.captured == -1 && depth < MAX_PLY)
+            {
                 killerMoves[depth][1] = killerMoves[depth][0];
                 killerMoves[depth][0] = m;
             }
+
+            // 3. TRANSPOSITION TABLE WRITE (BETA)
+
+            // Store Lower Bound. Pack move as (from + to<<6)
+            int packed = m.from | (m.to << 6);
+            WriteTT(positionKey, packed, beta, depth, TT_FLAG_BETA);
+
             return beta;
         }
 
-        if (score > alpha) alpha = score;
+        if (score > alpha)
+        {
+            alpha = score;
+            bestMove = m; // Update best move for TT
+        }
     }
 
-    // check for mate or stalemate
-    if (legalMoves == 0) {
+    // Check for mate/stalemate
+    if (legalMoves == 0)
+    {
         if (IsKingInCheck(side))
             return -MATE + (MAX_PLY - depth);
         else
             return 0;
     }
 
+    // TRANSPOSITION TABLE WRITE (ALPHA / EXACT)
+    int packedBest = bestMove.from | (bestMove.to << 6);
+
+    if (alpha > alphaOrig)
+    {
+        // We improved alpha, so we know the exact score
+        WriteTT(positionKey, packedBest, alpha, depth, TT_FLAG_EXACT);
+    }
+    else
+    {
+        // We failed low, so this is an Upper Bound
+        WriteTT(positionKey, packedBest, alpha, depth, TT_FLAG_ALPHA);
+    }
+
     return alpha;
 }
 
 // iterative deepening + root move selection
-void SearchPosition(int maxDepth, int timeAllocatedMs) {
+void SearchPosition(int maxDepth, int timeAllocatedMs)
+{
 
     ClearSearch();
     info.stopTime = info.startTime + timeAllocatedMs;
@@ -108,10 +163,12 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
     int bestScore = 0;
 
     // deepen one ply at a time
-    for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++) {
+    for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
+    {
 
         // don’t start a new depth if we’re already out of time
-        if (GetTimeMs() >= info.stopTime) break;
+        if (GetTimeMs() >= info.stopTime)
+            break;
 
         int alpha = -INF;
         int beta = INF;
@@ -122,11 +179,12 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
         Move depthBestMove = {0};
         int depthBestScore = -INF;
 
-        // root loop 
-        for (int i = 0; i < list.count; i++) {
-            PickNextMove(&list, i, (Move){0}, (Move){0});
+        // root loop
+        for (int i = 0; i < list.count; i++)
+        {
+            PickNextMove(&list, i, (Move){0}, (Move){0}, 0);
             MakeMove(&list, i);
-            
+
             // check for legality
             if (IsKingInCheck(side ^ 1))
             {
@@ -138,9 +196,10 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
             UndoMove(&list, i);
 
             // depth incomplete -> throw it away
-            if (info.stopped) break;
+            if (info.stopped)
+                break;
 
-            if (score > depthBestScore) 
+            if (score > depthBestScore)
             {
                 depthBestScore = score;
                 depthBestMove = list.moves[i];
@@ -148,7 +207,8 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
             }
         }
 
-        if (info.stopped) break;
+        if (info.stopped)
+            break;
 
         // depth fully searched, update best move and score
         bestMove = depthBestMove;
@@ -156,7 +216,8 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
 
         // uci info output
         long timeSpent = GetTimeMs() - info.startTime;
-        if (timeSpent == 0) timeSpent = 1;
+        if (timeSpent == 0)
+            timeSpent = 1;
 
         printf(
             "info depth: %d score: %d CP nodes: %ld time: %ld nps: %ld ",
@@ -164,8 +225,7 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
             bestScore,
             info.nodes,
             timeSpent,
-            (info.nodes * 1000) / timeSpent
-        );
+            (info.nodes * 1000) / timeSpent);
 
         char f1 = 'a' + (bestMove.from % 8);
         char r1 = '1' + (bestMove.from / 8);
@@ -183,30 +243,38 @@ void SearchPosition(int maxDepth, int timeAllocatedMs) {
 }
 
 // quiescence search
-int Quiescence(int alpha, int beta) {
-    if ((info.nodes & 2047) == 0) CheckTime();
-    if (info.stopped) return 0;
+int Quiescence(int alpha, int beta)
+{
+    if ((info.nodes & 2047) == 0)
+        CheckTime();
+    if (info.stopped)
+        return 0;
 
     info.nodes++;
 
     int score = Evaluate();
 
-    if (score >= beta) return beta;
-    if (score > alpha) alpha = score;
+    if (score >= beta)
+        return beta;
+    if (score > alpha)
+        alpha = score;
 
     MoveList list;
     GenerateMoves(&list);
 
-    for (int i = 0; i < list.count; i++) {
-        PickNextMove(&list, i, (Move){0}, (Move){0});
+    for (int i = 0; i < list.count; i++)
+    {
+        PickNextMove(&list, i, (Move){0}, (Move){0}, 0);
         Move m = list.moves[i];
 
         // only noisy moves
-        if (m.captured == -1 && !(m.flags & FLAG_PROMOTION)) continue;
+        if (m.captured == -1 && !(m.flags & FLAG_PROMOTION))
+            continue;
 
         MakeMove(&list, i);
 
-        if (IsKingInCheck(side ^ 1)) {
+        if (IsKingInCheck(side ^ 1))
+        {
             UndoMove(&list, i);
             continue;
         }
@@ -214,10 +282,13 @@ int Quiescence(int alpha, int beta) {
         int tempScore = -Quiescence(-beta, -alpha);
         UndoMove(&list, i);
 
-        if (info.stopped) return 0;
+        if (info.stopped)
+            return 0;
 
-        if (tempScore >= beta) return beta;
-        if (tempScore > alpha) alpha = tempScore;
+        if (tempScore >= beta)
+            return beta;
+        if (tempScore > alpha)
+            alpha = tempScore;
     }
 
     return alpha;

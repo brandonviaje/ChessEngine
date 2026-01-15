@@ -10,9 +10,9 @@
 
 typedef struct
 {
-    U64 hashKey; // Unique Zobrist Key (to check for collisions)
+    U64 hashKey; //  zobrist Key
     int score;   //  evaluation score
-    int move;    //  best move found (BestMove)
+    int move;    //  best move found
     int depth;
     int flags; // EXACT, ALPHA, or BETA
 } TTEntry;

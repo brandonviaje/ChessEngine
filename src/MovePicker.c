@@ -22,8 +22,16 @@ int SameMove(Move a, Move b)
 }
 
 // score a move for move ordering, accepts killers
-int ScoreMove(Move m, Move k1, Move k2)
+int ScoreMove(Move m, Move k1, Move k2, int ttMove)
 {
+    // if this move is trans Table recommended, search it first
+    if (ttMove != 0)
+    {
+        int packed = m.from | (m.to << 6);
+        if (packed == ttMove)
+            return 30000;
+    }
+
     // captures first, always fire high
     if (m.captured != -1)
     {
@@ -32,29 +40,29 @@ int ScoreMove(Move m, Move k1, Move k2)
         return 10000 + mvv_lva[attacker][victim];
     }
 
-    // promotions next, still juicy
+    // promotions
     if (m.flags & FLAG_PROMOTION)
         return 9000;
 
-    // killer moves matter too, give them priority
+    // killer moves
     if (SameMove(m, k1))
         return 8000;
     if (SameMove(m, k2))
         return 7000;
 
-    // quiet moves get nothing special
+    // quiet moves
     return 0;
 }
 
 // pick next best move to try, based on scoring
-void PickNextMove(MoveList *list, int moveNum, Move k1, Move k2)
+void PickNextMove(MoveList *list, int moveNum, Move k1, Move k2, int ttMove)
 {
     int bestScore = -1;
     int bestIndex = moveNum;
 
     for (int i = moveNum; i < list->count; i++)
     {
-        int score = ScoreMove(list->moves[i], k1, k2);
+        int score = ScoreMove(list->moves[i], k1, k2, ttMove);
 
         if (score > bestScore)
         {

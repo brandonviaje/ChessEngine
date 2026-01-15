@@ -7,7 +7,9 @@ int main()
     InitZobrist();
     InitTT(64);
 
-    ParseFEN(starting_position);
+    ParseFEN(kiwipete);
+
+    CleanupMagic();
 
     return 0;
 }

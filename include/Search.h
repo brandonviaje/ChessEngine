@@ -5,8 +5,8 @@
 #include "MoveGen.h"
 #include "Evaluate.h"
 #include "MyTypes.h"
-#include "Board.h"
 #include "MovePicker.h"
+#include "Transposition.h"
 #include <sys/time.h>
 
 #define INF 50000
