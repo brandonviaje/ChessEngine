@@ -1,8 +1,8 @@
 #ifndef MOVEPICKER_H
 #define MOVEPICKER_H
 
-#include "MyTypes.h"
 #include "Board.h"
+#include "MyTypes.h"
 
 int GetPieceIndex(int piece);
 int SameMove(Move a, Move b);

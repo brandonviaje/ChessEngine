@@ -3,7 +3,6 @@
 
 #include "Main.h"
 
-// TT Entry Flags
 #define TT_FLAG_EXACT 0 // exact score
 #define TT_FLAG_ALPHA 1 // Upper Bound
 #define TT_FLAG_BETA 2  // Lower Bound
@@ -14,7 +13,7 @@ typedef struct
     int score;   //  evaluation score
     int move;    //  best move found
     int depth;
-    int flags; // EXACT, ALPHA, or BETA
+    int flags;   // EXACT, ALPHA, or BETA
 } TTEntry;
 
 typedef struct

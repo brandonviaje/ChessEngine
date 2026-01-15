@@ -8,8 +8,8 @@
 #include "MyTypes.h"
 #include "Perft.h"
 #include "Search.h"
-#include "uci.h"
 #include "Transposition.h"
+#include "uci.h"
 #include "Zobrist.h"
 
 #endif

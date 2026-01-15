@@ -1,11 +1,11 @@
 #ifndef MOVEGEN_H
 #define MOVEGEN_H
 
+#include "Attack.h"
+#include "Board.h"
+#include "Magic.h"
 #include "Masks.h"
 #include "MyTypes.h"
-#include "Attack.h"
-#include "Magic.h"
-#include "Board.h"
 
 typedef struct MoveList
 {

@@ -2,8 +2,8 @@
 #define MAGIC_H
 
 #include "Board.h"
-#include "MyTypes.h"
 #include "Masks.h"
+#include "MyTypes.h"
 
 typedef struct
 {

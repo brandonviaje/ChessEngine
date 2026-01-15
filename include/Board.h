@@ -1,8 +1,8 @@
 #ifndef BITBOARD_H
 #define BITBOARD_H
 
-#include "MyTypes.h"
 #include "MoveGen.h"
+#include "MyTypes.h"
 #include "Zobrist.h"
 
 // Piece bitboards

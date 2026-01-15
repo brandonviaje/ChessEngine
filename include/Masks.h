@@ -1,5 +1,6 @@
 #ifndef MASKS_H
 #define MASKS_H
+
 #include "MyTypes.h"
 
 // Rank masks

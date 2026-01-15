@@ -1,8 +1,8 @@
 #ifndef ZOBRIST_H
 #define ZOBRIST_H
 
-#include "MyTypes.h"
 #include "Board.h"
+#include "MyTypes.h"
 
 // Globals
 extern U64 pieceKeys[13][120]; // [PieceType][Square]

@@ -2,13 +2,13 @@
 #define MYTYPES_H
 
 // Libraries
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <errno.h>
-#include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <time.h>
 
 // FEN Notation

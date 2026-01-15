@@ -1,5 +1,5 @@
-#include "../include/PieceSquareTable.h"
 #include "../include/Evaluate.h"
+#include "../include/PieceSquareTable.h"
 
 // Piece-square tables for white pieces
 int PawnPST[64] = {

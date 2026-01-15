@@ -2,9 +2,9 @@
 #define ATTACK_H
 
 #include "Board.h"
+#include "Magic.h"
 #include "MoveGen.h"
 #include "MyTypes.h"
-#include "Magic.h"
 
 extern U64 knightAttacks[64];
 extern U64 kingAttacks[64];

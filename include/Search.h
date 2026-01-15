@@ -2,12 +2,12 @@
 #define SEARCH_H
 
 #include "Board.h"
-#include "MoveGen.h"
 #include "Evaluate.h"
-#include "MyTypes.h"
+#include "MoveGen.h"
 #include "MovePicker.h"
-#include "Transposition.h"
+#include "MyTypes.h"
 #include <sys/time.h>
+#include "Transposition.h"
 
 #define INF 50000
 #define MATE 49000

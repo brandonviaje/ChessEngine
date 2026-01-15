@@ -1,9 +1,9 @@
 #ifndef EVALUATION_H
 #define EVALUATION_H
 
+#include "Board.h"
 #include "Evaluate.h"
 #include "MyTypes.h"
-#include "Board.h"
 #include "Utils.h"
 
 // Function prototypes

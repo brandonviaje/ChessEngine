@@ -1,9 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "MyTypes.h"
-#include "Board.h"
 #include "Attack.h"
+#include "Board.h"
+#include "MyTypes.h"
 #include "PieceSquareTable.h"
 
 extern U64 FileBBMask[8];
