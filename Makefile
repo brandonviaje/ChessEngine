@@ -10,19 +10,19 @@ TEST_DIR = tests
 BUILD_DIR = build
 
 # Source files
-SRCS = $(SRC_DIR)/Board.c \
-	   $(SRC_DIR)/Main.c \
-       $(SRC_DIR)/MoveGen.c \
-	   $(SRC_DIR)/MovePicker.c \
-       $(SRC_DIR)/Attack.c \
+SRCS = $(SRC_DIR)/Attack.c \
+       $(SRC_DIR)/Board.c \
+       $(SRC_DIR)/Evaluate.c \
        $(SRC_DIR)/Magic.c \
-	   $(SRC_DIR)/Utils.c \
-	   $(SRC_DIR)/Evaluate.c \
-	   $(SRC_DIR)/PieceSquareTable.c \
-	   $(SRC_DIR)/Search.c \
-	   $(SRC_DIR)/uci.c \
-	   $(SRC_DIR)/Zobrist.c \
-	   $(SRC_DIR)/Transposition.c \
+       $(SRC_DIR)/Main.c \
+       $(SRC_DIR)/MoveGen.c \
+       $(SRC_DIR)/MovePicker.c \
+       $(SRC_DIR)/PieceSquareTable.c \
+       $(SRC_DIR)/Search.c \
+       $(SRC_DIR)/Transposition.c \
+       $(SRC_DIR)/Utils.c \
+       $(SRC_DIR)/Zobrist.c \
+       $(SRC_DIR)/uci.c \
        $(TEST_DIR)/Perft.c
 
 # Object files placed under build
