@@ -51,6 +51,7 @@ typedef struct
     int flags;     // handles special moves
     int prevEnpassant;
     int prevCastle;
+    int prevHalfMove;
 } Move;
 
 typedef enum

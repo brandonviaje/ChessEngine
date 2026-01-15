@@ -228,6 +228,7 @@ void MakeMove(MoveList *list, int index)
     U64 toMask = 1ULL << to;
     list->moves[index].prevCastle = castle;
     list->moves[index].prevEnpassant = enpassant;
+    list->moves[index].prevHalfMove = halfmove;
     enpassant = -1;
 
     switch (moveFlag)
@@ -362,6 +363,16 @@ void MakeMove(MoveList *list, int index)
     }
     }
     UpdateCastlingRights(piece, from, to, captured);
+
+    // update halfmove and full move clock
+    if (piece == P || piece == p || captured != -1)
+        halfmove = 0;
+    else
+        halfmove++;
+
+    if (side == BLACK) // fullmove update after black moves
+        fullmove++;
+
     side ^= 1; // flip sides
 }
 
@@ -483,6 +494,11 @@ void UndoMove(MoveList *list, int index)
     }
     }
     side ^= 1; // flip side
+
+    // restore half and full moves
+    halfmove = list->moves[index].prevHalfMove;
+    if (side == BLACK) // we just undid Black's move
+        fullmove--;
 }
 
 // Move a piece from one square to another
