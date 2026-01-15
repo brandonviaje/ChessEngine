@@ -8,5 +8,6 @@
 #include "MyTypes.h"
 #include "Perft.h"
 #include "Search.h"
+#include "uci.h"
 
 #endif

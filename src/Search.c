@@ -30,11 +30,16 @@ void ClearSearch() {
 
 // main negamax alpha-beta
 int AlphaBeta(int alpha, int beta, int depth) {
-    if ((info.nodes & 2047) == 0) CheckTime();
-    if (info.stopped) return 0;
 
-    // leaf -> quiescence
-    if (depth == 0) return Quiescence(alpha, beta);
+    // check time limits
+    if ((info.nodes & 2047) == 0) 
+        CheckTime();
+    if (info.stopped) 
+        return 0;
+
+    // leaf -> quiescence search
+    if (depth == 0) 
+        return Quiescence(alpha, beta);
 
     info.nodes++;
 
@@ -46,18 +51,19 @@ int AlphaBeta(int alpha, int beta, int depth) {
 
     // grab killer moves for this ply
     Move k1 = {0}, k2 = {0};
-    if (depth < MAX_PLY) {
+    if (depth < MAX_PLY) 
+    {
         k1 = killerMoves[depth][0];
         k2 = killerMoves[depth][1];
     }
 
-    for (int i = 0; i < list.count; i++) {
+    for (int i = 0; i < list.count; i++) 
+    {
         PickNextMove(&list, i, k1, k2);
         Move m = list.moves[i];
-
         MakeMove(&list, i);
 
-        // illegal move (self-check)
+        // check for legality
         if (IsKingInCheck(side ^ 1)) {
             UndoMove(&list, i);
             continue;
@@ -81,7 +87,7 @@ int AlphaBeta(int alpha, int beta, int depth) {
         if (score > alpha) alpha = score;
     }
 
-    // no legal moves = mate or stalemate
+    // check for mate or stalemate
     if (legalMoves == 0) {
         if (IsKingInCheck(side))
             return -MATE + (MAX_PLY - depth);
@@ -94,6 +100,7 @@ int AlphaBeta(int alpha, int beta, int depth) {
 
 // iterative deepening + root move selection
 void SearchPosition(int maxDepth, int timeAllocatedMs) {
+
     ClearSearch();
     info.stopTime = info.startTime + timeAllocatedMs;
 
