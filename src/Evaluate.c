@@ -6,198 +6,134 @@ extern int halfmove;
 extern U64 occupied;
 
 //  MATERIAL
-int PieceValue(int piece, int phase)
-{
-    // phase = 0 (endgame) -> endgame weights, 128 = opening
-    switch (piece)
-    {
-    case P:
-    case p:
-        return (phase * 100 + (128 - phase) * 120) / 128;
-    case N:
-    case n:
-        return (phase * 320 + (128 - phase) * 310) / 128;
-    case B:
-    case b:
-        return (phase * 330 + (128 - phase) * 350) / 128;
-    case R:
-    case r:
-        return (phase * 500 + (128 - phase) * 510) / 128;
-    case Q:
-    case q:
-        return 900;
-    case K:
-    case k:
-        return 20000;
-    default:
-        return 0;
-    }
-}
-
-// material based eval
-int SimpleEval(int phase)
+int MaterialAndPosition(int phase)
 {
     int score = 0;
+    U64 bb;
+    int sq;
 
-    // loop through white pieces
-    score += PopCount(bitboards[P]) * PieceValue(P, phase);
-    score += PopCount(bitboards[N]) * PieceValue(N, phase);
-    score += PopCount(bitboards[B]) * PieceValue(B, phase);
-    score += PopCount(bitboards[R]) * PieceValue(R, phase);
-    score += PopCount(bitboards[Q]) * PieceValue(Q, phase);
-    score += PopCount(bitboards[K]) * PieceValue(K, phase);
+    // Define base values based on phase
+    int KnightVal = 320 - ((phase > 0) ? ((16 - phase / 8) * 2) : 0);
 
-    // loop through black pieces
-    score -= PopCount(bitboards[p]) * PieceValue(p, phase);
-    score -= PopCount(bitboards[n]) * PieceValue(n, phase);
-    score -= PopCount(bitboards[b]) * PieceValue(b, phase);
-    score -= PopCount(bitboards[r]) * PieceValue(r, phase);
-    score -= PopCount(bitboards[q]) * PieceValue(q, phase);
-    score -= PopCount(bitboards[k]) * PieceValue(k, phase);
+    if (KnightVal > 320)
+        KnightVal = 320; // Clamp
+
+    if (KnightVal < 300)
+        KnightVal = 300;
+
+    int RookVal = 500 + (16 - phase / 8) * 2;
+
+    //  WHITE PIECES
+
+    // Pawns
+    bb = bitboards[P];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score += 100 + PawnPST[sq];
+        pop_lsb(&bb);
+    }
+
+    // Knights
+    bb = bitboards[N];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score += KnightVal + KnightPST[sq];
+        pop_lsb(&bb);
+    }
+
+    // Bishops
+    bb = bitboards[B];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score += 330 + BishopPST[sq];
+        pop_lsb(&bb);
+    }
+
+    // Rooks
+    bb = bitboards[R];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score += RookVal + RookPST[sq];
+        pop_lsb(&bb);
+    }
+
+    // Queens
+    bb = bitboards[Q];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score += 900 + QueenPST[sq];
+        pop_lsb(&bb);
+    }
+
+    // King
+    bb = bitboards[K];
+    if (bb)
+    {
+        sq = lsb(bb);
+        score += 20000 + KingPST[sq];
+    }
+
+    //  BLACK PIECES
+
+    // Pawns
+    bb = bitboards[p];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score -= (100 + PawnPST[Mirror(sq)]);
+        pop_lsb(&bb);
+    }
+
+    // Knights
+    bb = bitboards[n];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score -= (KnightVal + KnightPST[Mirror(sq)]);
+        pop_lsb(&bb);
+    }
+
+    // Bishops
+    bb = bitboards[b];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score -= (330 + BishopPST[Mirror(sq)]);
+        pop_lsb(&bb);
+    }
+
+    // Rooks
+    bb = bitboards[r];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score -= (RookVal + RookPST[Mirror(sq)]);
+        pop_lsb(&bb);
+    }
+
+    // Queens
+    bb = bitboards[q];
+    while (bb)
+    {
+        sq = lsb(bb);
+        score -= (900 + QueenPST[Mirror(sq)]);
+        pop_lsb(&bb);
+    }
+
+    // King
+    bb = bitboards[k];
+    if (bb)
+    {
+        sq = lsb(bb);
+        score -= (20000 + KingPST[Mirror(sq)]);
+    }
 
     return score;
-}
-
-//  PAWN STRUCTURE
-
-// count passed pawns
-int PassedPawns(U64 pawns, U64 enemyPawns, int color)
-{
-    int count = 0;
-    while (pawns)
-    {
-        int sq = __builtin_ctzll(pawns);
-        int rank = sq / 8;
-        int file = sq % 8;
-        U64 mask = 0ULL;
-
-        // generate mask of squares in front of the pawn
-        if (color == WHITE)
-        {
-            for (int r = rank + 1; r < 8; r++)
-                for (int f = (file > 0 ? file - 1 : 0); f <= (file < 7 ? file + 1 : 7); f++)
-                    mask |= 1ULL << (r * 8 + f);
-        }
-        else
-        {
-            for (int r = rank - 1; r >= 0; r--)
-                for (int f = (file > 0 ? file - 1 : 0); f <= (file < 7 ? file + 1 : 7); f++)
-                    mask |= 1ULL << (r * 8 + f);
-        }
-
-        if ((mask & enemyPawns) == 0)
-            count++;
-        pawns &= pawns - 1;
-    }
-    return count;
-}
-
-// count if there's doubled pawns on board
-int DoubledPawns(U64 pawns)
-{
-    int count = 0;
-    for (int f = 0; f < 8; f++)
-    {
-        U64 mask = 0x0101010101010101ULL << f;
-        int n = PopCount(pawns & mask);
-        if (n > 1)
-            count += n - 1;
-    }
-    return count;
-}
-
-// count isolated pawns
-int IsolatedPawns(U64 pawns)
-{
-    int count = 0;
-    for (int f = 0; f < 8; f++)
-    {
-        U64 fileMask = 0x0101010101010101ULL << f;
-        if (fileMask & pawns)
-        {
-            U64 adj = 0;
-            if (f > 0)
-                adj |= 0x0101010101010101ULL << (f - 1);
-            if (f < 7)
-                adj |= 0x0101010101010101ULL << (f + 1);
-            if (!(adj & pawns))
-                count += PopCount(fileMask & pawns);
-        }
-    }
-    return count;
-}
-
-// count backward pawns
-int BackwardPawns(U64 pawns, U64 enemyPawns, int color)
-{
-    int count = 0;
-    while (pawns)
-    {
-        int sq = __builtin_ctzll(pawns);
-        int rank = sq / 8, file = sq % 8;
-        U64 mask = 0ULL;
-        if (color == WHITE)
-        {
-            if (rank < 7)
-                mask |= 1ULL << ((rank + 1) * 8 + file);
-        }
-        else
-        {
-            if (rank > 0)
-                mask |= 1ULL << ((rank - 1) * 8 + file);
-        }
-        if (mask & enemyPawns)
-            count++;
-        pawns &= pawns - 1;
-    }
-    return count;
-}
-
-//  check how many pawns are in front of the king
-int KingPawnShield(U64 king, U64 pawns, int color)
-{
-    if (!king) // no king? then GG
-        return 0;
-
-    int sq = __builtin_ctzll(king); // king square
-    int rank = sq / 8, file = sq % 8;
-
-    U64 shield = 0ULL;
-
-    if (color == WHITE) // white moves up
-    {
-        if (rank + 1 <= 7)
-            shield |= 1ULL << ((rank + 1) * 8 + file); // pawn just ahead
-        if (rank + 2 <= 7)
-            shield |= 1ULL << ((rank + 2) * 8 + file); // pawn two steps ahead
-        if (file > 0)
-            shield |= 1ULL << ((rank + 1) * 8 + (file - 1)); // left side
-        if (file < 7)
-            shield |= 1ULL << ((rank + 1) * 8 + (file + 1)); // right side
-    }
-    else // black moves down
-    {
-        if (rank - 1 >= 0)
-            shield |= 1ULL << ((rank - 1) * 8 + file); // pawn just ahead
-        if (rank - 2 >= 0)
-            shield |= 1ULL << ((rank - 2) * 8 + file); // pawn two steps ahead
-        if (file > 0)
-            shield |= 1ULL << ((rank - 1) * 8 + (file - 1)); // left side
-        if (file < 7)
-            shield |= 1ULL << ((rank - 1) * 8 + (file + 1)); // right side
-    }
-
-    return PopCount(shield & pawns); // count how many pawns are keeping the king safe
-}
-
-// king
-int KingCentralization(U64 king)
-{
-    if (!king)
-        return 0;
-    int sq = __builtin_ctzll(king);
-    int rank = sq / 8, file = sq % 8;
-    return (4 - abs(3 - rank)) + (4 - abs(3 - file));
 }
 
 //  POSITIONAL EVAL
@@ -237,162 +173,207 @@ int PositionalEval(int phase)
     return score;
 }
 
-// MOBILITY: How many squares a piece can reach, weighted by type
-int Mobility(U64 pieces, int pieceType)
+// PAWNS
+
+int PawnEval(int phase)
 {
     int score = 0;
-    while (pieces)
-    {
-        // get first piece
-        int sq = __builtin_ctzll(pieces);
-        U64 attacks = 0ULL;
-        // grab attack mask for this piece
-        switch (pieceType)
-        {
-        case N:
-            attacks = knightAttacks[sq];
-            break;
-        case B:
-            attacks = GetBishopAttacks(sq, occupied);
-            break;
-        case R:
-            attacks = GetRookAttacks(sq, occupied);
-            break;
-        case Q:
-            attacks = GetBishopAttacks(sq, occupied) | GetRookAttacks(sq, occupied);
-            break;
-        default:
-            attacks = 0;
-            break;
-        }
-        // give pieces weight based on piece type
-        int weight = (pieceType == N) ? 1 : (pieceType == B) ? 2
-                                        : (pieceType == R)   ? 3
-                                        : (pieceType == Q)   ? 4
-                                                             : 0;
-        score += PopCount(attacks) * weight;
-        pieces &= pieces - 1; // pop LSB and process next one
-    }
+    int lateGameWeight = (128 - phase); // Higher number = later game
+
+    // Isolated & Doubled
+    score -= IsolatedPawns(bitboards[P]) * 12;
+    score += IsolatedPawns(bitboards[p]) * 12;
+
+    score -= DoubledPawns(bitboards[P]) * 10;
+    score += DoubledPawns(bitboards[p]) * 10;
+
+    // Backward
+    score -= BackwardPawns(bitboards[P], bitboards[p], WHITE) * 4;
+    score += BackwardPawns(bitboards[p], bitboards[P], BLACK) * 4;
+
+    // Passed Pawns
+    score += PassedPawns(bitboards[P], bitboards[p], WHITE) * 15 * lateGameWeight / 128;
+    score -= PassedPawns(bitboards[p], bitboards[P], BLACK) * 15 * lateGameWeight / 128;
+
+    // Check White D2 pawn blocked by D3 piece
+    if ((bitboards[P] & (1ULL << D2)) && (occupied & (1ULL << D3)))
+        score -= 8;
+    if ((bitboards[P] & (1ULL << E2)) && (occupied & (1ULL << E3)))
+        score -= 8;
+
+    // Check Black D7 pawn blocked by D6 piece
+    if ((bitboards[p] & (1ULL << D7)) && (occupied & (1ULL << D6)))
+        score += 8;
+    if ((bitboards[p] & (1ULL << E7)) && (occupied & (1ULL << E6)))
+        score += 8;
+
     return score;
 }
 
-// CENTRALIZATION: Bonus for being near the center
-int CentralizationBonus(U64 pieces, int pieceType)
+//  KNIGHTS
+
+int KnightEval()
 {
     int score = 0;
-    while (pieces)
-    {
-        int sq = __builtin_ctzll(pieces);
-        int r = sq / 8, f = sq % 8;
-        int dist = abs(3 - r) + abs(3 - f);
-        int mult = (pieceType == R || pieceType == Q) ? 5 : 10;
-        score += (4 - dist) * mult;
-        pieces &= pieces - 1;
-    }
-    return score;
-}
 
-//  MISC
-int HasBishopPair(U64 bishops) { return PopCount(bishops) >= 2; }
+    // Calculate ALL Pawn Attacks at once.
+    U64 whitePawnAttacks = ((bitboards[P] & ~FILE_A) << 7) | ((bitboards[P] & ~FILE_H) << 9);
+    U64 blackPawnAttacks = ((bitboards[p] & ~FILE_A) >> 9) | ((bitboards[p] & ~FILE_H) >> 7);
 
-int RooksOnOpenFiles(U64 rooks)
-{
-    int count = 0;
-    for (int f = 0; f < 8; f++)
-    {
-        U64 fileMask = 0x0101010101010101ULL << f;
-        U64 pawnsOnFile = fileMask & (bitboards[P] | bitboards[p]);
-        if (!pawnsOnFile)
-            count += PopCount(rooks & fileMask);
-    }
-    return count;
-}
-
-int RooksOn7th(U64 rooks, int color)
-{
-    int rank = (color == WHITE) ? 6 : 1;
-    U64 mask = 0xFFULL << (rank * 8);
-    return PopCount(rooks & mask);
-}
-
-// count how many bits in BB
-int PopCount(U64 bb)
-{
-    int count = 0;
+    // WHITE KNIGHTS
+    U64 bb = bitboards[N];
     while (bb)
     {
-        bb &= bb - 1;
-        count++;
+        int sq = lsb(bb);
+
+        if (IsOutpost(sq, WHITE))
+            score += 25;
+        if (IsDefendedByPawn(sq, WHITE))
+            score += 6;
+        if (IsTrappedKnight(sq))
+            score -= 80;
+        if (!IsDefended(sq, WHITE))
+            score -= 8;
+
+        // mobility: valid moves NOT attacked by enemy pawns
+        U64 moves = knightAttacks[sq] & ~blackPawnAttacks;
+        score += PopCount(moves);
+
+        pop_lsb(&bb);
     }
-    return count;
+
+    // BLACK KNIGHTS
+    bb = bitboards[n];
+    while (bb)
+    {
+        int sq = lsb(bb);
+
+        if (IsOutpost(sq, BLACK))
+            score -= 25;
+        if (IsDefendedByPawn(sq, BLACK))
+            score -= 6;
+        if (IsTrappedKnight(sq))
+            score += 80;
+        if (!IsDefended(sq, BLACK))
+            score += 8;
+
+        U64 moves = knightAttacks[sq] & ~whitePawnAttacks;
+        score -= PopCount(moves);
+
+        pop_lsb(&bb);
+    }
+
+    // trap: White Knight on C3 blocked
+    // check specific squares
+    if ((bitboards[N] & (1ULL << C3)) && (bitboards[P] & (1ULL << C2)) && (bitboards[P] & (1ULL << D4)) && !(bitboards[P] & (1ULL << E4)))
+    {
+        score -= 10;
+    }
+
+    return score;
 }
 
-// flip square for black’s POV
-int Mirror(int square)
+//  BISHOPS
+
+int BishopEval(int phase)
 {
-    return (7 - square / 8) * 8 + (square % 8);
+    int score = 0;
+
+    if (PopCount(bitboards[B]) >= 2)
+        score += (phase > 64 ? 25 : 50);
+    if (PopCount(bitboards[b]) >= 2)
+        score -= (phase > 64 ? 25 : 50);
+
+    score -= BadBishops(bitboards[B], bitboards[P]) * 4;
+    score += BadBishops(bitboards[b], bitboards[p]) * 4;
+
+    return score;
 }
 
-//  GAME PHASE
+//  ROOKS
+
+int RookEval()
+{
+    int score = 0;
+
+    score += RooksOnOpenFiles(bitboards[R]) * 15;
+    score -= RooksOnOpenFiles(bitboards[r]) * 15;
+
+    score += RooksOn7th(bitboards[R], WHITE) * 25;
+    score -= RooksOn7th(bitboards[r], BLACK) * 25;
+
+    if (ConnectedRooks(bitboards[R]))
+        score += 8;
+    if (ConnectedRooks(bitboards[r]))
+        score -= 8;
+
+    return score;
+}
+
+//  QUEEN
+
+int QueenEval()
+{
+    int score = 0;
+
+    if (EarlyQueenDeveloped(WHITE))
+        score -= 10;
+    if (EarlyQueenDeveloped(BLACK))
+        score += 10;
+
+    return score;
+}
+
+//  KING
+
+int KingEval(int phase)
+{
+    int score = 0;
+
+    if (phase > 64)
+    {
+        score += KingPawnShield(bitboards[K], bitboards[P], WHITE) * 10;
+        score -= KingPawnShield(bitboards[k], bitboards[p], BLACK) * 10;
+    }
+    else
+    {
+        score += KingCentralization(bitboards[K]) * 5;
+        score -= KingCentralization(bitboards[k]) * 5;
+    }
+
+    return score;
+}
+
+//  PHASE
+
 int GamePhase()
 {
     int phase = 128;
-    int totalMaterial = 0;
-    totalMaterial += PopCount(bitboards[N]) * 1;
-    totalMaterial += PopCount(bitboards[B]) * 1;
-    totalMaterial += PopCount(bitboards[R]) * 2;
-    totalMaterial += PopCount(bitboards[Q]) * 4;
-    phase -= totalMaterial;
+    phase -= PopCount(bitboards[N]);
+    phase -= PopCount(bitboards[B]);
+    phase -= PopCount(bitboards[R]) * 2;
+    phase -= PopCount(bitboards[Q]) * 4;
     if (phase < 0)
         phase = 0;
     return phase;
 }
 
-//  FULL EVALUATION
+//  EVAL
+
 int Evaluate()
 {
     int phase = GamePhase();
+    int score = 0;
 
-    int score = SimpleEval(phase) + PositionalEval(phase);
+    score += MaterialAndPosition(phase);
+    score += PositionalEval(phase);
+    score += PawnEval(phase);
+    score += KnightEval();
+    score += BishopEval(phase);
+    score += RookEval();
+    score += QueenEval();
+    score += KingEval(phase);
 
-    // Pawn structure
-    score += (PassedPawns(bitboards[P], bitboards[p], WHITE) - PassedPawns(bitboards[p], bitboards[P], BLACK)) * 50;
-    score -= (DoubledPawns(bitboards[P]) - DoubledPawns(bitboards[p])) * 20;
-    score -= (IsolatedPawns(bitboards[P]) - IsolatedPawns(bitboards[p])) * 20;
-    score -= (BackwardPawns(bitboards[P], bitboards[p], WHITE) - BackwardPawns(bitboards[p], bitboards[P], BLACK)) * 15;
-
-    // Bishop pair
-    score += HasBishopPair(bitboards[B]) ? 30 : 0;
-    score -= HasBishopPair(bitboards[b]) ? 30 : 0;
-
-    // Rooks
-    score += RooksOnOpenFiles(bitboards[R]) * 25;
-    score -= RooksOnOpenFiles(bitboards[r]) * 25;
-
-    score += RooksOn7th(bitboards[R], WHITE);
-    score -= RooksOn7th(bitboards[r], BLACK);
-
-    // King safety / activity
-    score += KingPawnShield(bitboards[K], bitboards[P], WHITE) * 10;
-    score -= KingPawnShield(bitboards[k], bitboards[p], BLACK) * 10;
-
-    score += KingCentralization(bitboards[K]) * 5;
-    score -= KingCentralization(bitboards[k]) * 5;
-
-    // Mobility & centralization
-    score += Mobility(bitboards[N], N) + CentralizationBonus(bitboards[N], N);
-    score -= Mobility(bitboards[n], N) + CentralizationBonus(bitboards[n], N);
-
-    score += Mobility(bitboards[B], B) + CentralizationBonus(bitboards[B], B);
-    score -= Mobility(bitboards[b], B) + CentralizationBonus(bitboards[b], B);
-
-    score += Mobility(bitboards[R], R) + CentralizationBonus(bitboards[R], R);
-    score -= Mobility(bitboards[r], R) + CentralizationBonus(bitboards[r], R);
-
-    score += Mobility(bitboards[Q], Q) + CentralizationBonus(bitboards[Q], Q);
-    score -= Mobility(bitboards[q], Q) + CentralizationBonus(bitboards[q], Q);
-
-    // 50-move halfmove damping
     score -= score * halfmove / 200;
 
     return (side == WHITE) ? score : -score;
@@ -401,4 +382,47 @@ int Evaluate()
 void PrintEvaluation()
 {
     printf("Evaluation: %d centipawns\n", Evaluate());
+}
+
+void TraceEvaluation()
+{
+    int phase = GamePhase();
+    int score = 0;
+
+    printf("\n EVALUATION BREAKDOWN \n");
+
+    int matPos = MaterialAndPosition(phase);
+    printf("Material & PST:  %d\n", matPos);
+    score += matPos;
+
+    int pawns = PawnEval(phase);
+    printf("Pawn Structure:  %d\n", pawns);
+    score += pawns;
+
+    int knights = KnightEval();
+    printf("Knight Activity: %d\n", knights);
+    score += knights;
+
+    int bishops = BishopEval(phase);
+    printf("Bishop Pair/Bad: %d\n", bishops);
+    score += bishops;
+
+    int rooks = RookEval();
+    printf("Rook Open/Conn:  %d\n", rooks);
+    score += rooks;
+
+    int queens = QueenEval();
+    printf("Queen EarlyDev:  %d\n", queens);
+    score += queens;
+
+    int kings = KingEval(phase);
+    printf("King Safety:     %d\n", kings);
+    score += kings;
+
+    // Tempo / Drawishness
+    int finalScore = (side == WHITE) ? score : -score;
+    printf("--\n");
+    printf("Total Raw:       %d\n", score);
+    printf("Final (Side):    %d\n", finalScore);
+    printf("--\n\n");
 }

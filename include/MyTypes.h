@@ -37,6 +37,9 @@
 #define SetBit(board, square) ((board) |= (1ULL << (square)))
 #define GetBit(board, square) ((board) & (1ULL << (square)))
 #define PopBit(board, square) ((board) &= ~(1ULL << (square)))
+#define PopCount(bb) __builtin_popcountll(bb)
+#define lsb(bb) __builtin_ctzll(bb)
+#define pop_lsb(ptr) (*(ptr) &= (*(ptr) - 1))
 
 // Typedef
 typedef unsigned long long U64;

@@ -2,13 +2,12 @@
 
 int main()
 {
+
+    InitEvalMasks();
     InitAttacks();
-
-    ParseFEN(starting_position);
-    printf("Initial Board:\n");
+    ParseFEN(kiwipete);
     PrintBitBoard(occupied);
-    PrintEvaluation();
-
+    TraceEvaluation();
     CleanupMagic();
 
     return 0;

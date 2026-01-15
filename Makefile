@@ -15,6 +15,7 @@ SRCS = $(SRC_DIR)/Board.c \
        $(SRC_DIR)/MoveGen.c \
        $(SRC_DIR)/Attack.c \
        $(SRC_DIR)/Magic.c \
+	   $(SRC_DIR)/Utils.c \
 	   $(SRC_DIR)/Evaluate.c \
 	   $(SRC_DIR)/PieceSquareTable.c \
        $(TEST_DIR)/Perft.c
