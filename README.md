@@ -1,25 +1,63 @@
-# Chess Engine
+# ♟️ Chess Engine
 
-## About The Project
+A high-performance chess engine written in **C**, built completely from scratch with a focus on **efficient board representation**, **legal move generation**, and **modern search techniques**.  
+The engine is deployed as an autonomous bot on **Lichess**, playing real-time games via their API.
 
-This is a chess engine written in C. The goal of this project is to implement a fully functional engine from scratch, focusing on efficient move generation, board representation, and search algorithms.  
+---
 
-Key points:
-* Implements bitboards for efficient board representation.
-* Generates legal moves with proper edge handling.
-* Supports basic evaluation and move search algorithms.
-* Designed to be a foundation for further engine development.
+## About the Project
 
-### Built With
+This project explores the core systems behind competitive chess engines, emphasizing correctness, speed, and extensibility.  
+It serves both as a learning exercise in low-level systems programming and as a foundation for future engine strength improvements.
 
-<a href="https://www.c-language.org/">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/C_Programming_Language.svg/926px-C_Programming_Language.svg.png" width="100"/>
-</a>
+### Key Features
+- **Bitboard-based board representation** for fast move computation
+- **Fully legal move generation**, including:
+  - Castling
+  - En passant
+  - Promotions
+  - Check and pin validation
+- **Alpha–beta search with iterative deepening**
+- **NNUE-based evaluation** with dynamic weighting across game phases
+- **Search optimizations** including move ordering, quiescence search, and transposition tables
+- **Deployed as a Lichess bot**, handling asynchronous I/O, time controls, and live game states
 
-<!-- GETTING STARTED -->
-## Getting Started
+---
 
-To get a local copy of this chess engine up and running, follow these steps:
+## Lichess Bot
+
+The engine is live on **Lichess** as an automated bot:
+- Plays rated and unrated games
+- Manages real-time clocks and API events
+- Communicates asynchronously using the Lichess Bot API
+
+> This deployment validates engine correctness under real competitive conditions.
+
+---
+
+## 🛠️ Built With
+
+<p align="left">
+  <a href="https://www.c-language.org/">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/C_Programming_Language.svg/926px-C_Programming_Language.svg.png" width="90"/>
+  </a>
+</p>
+
+- **C** — low-level performance and memory control
+- **Make** — build automation
+- **Lichess API** — bot deployment and game management
+
+---
+
+## ⚙️ Getting Started
+
+Follow the steps below to build and run the engine locally.
+
+### Prerequisites
+- GCC or Clang
+- Make
+
+### Installation
 
 1. **Clone the repository**
 ```bash
@@ -27,55 +65,12 @@ git clone https://github.com/brandonviaje/ChessEngine.git
 cd ChessEngine/src
 ```
 
-2. **Build the engine**
+2. **Build the Engine**
 ```bash
-make
+make 
 ```
 
-3.  **Run the Engine**
+3. **Run the Engine**
 ```bash
-make run
+./viaje_Engine
 ```
-This will compile all source files and launch the chess engine in the terminal.
-
-<!-- USAGE EXAMPLES 
-
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
--->
-
-<!-- CONTACT 
-
-## Contact
-
-Brandon - [LinkedIn](https://www.linkedin.com/in/brandon-viaje/) 
-
-Project Link: [https://github.com/brandonviaje/ChessEngine](https://github.com/brandonviaje/ChessEngine)
--->
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* [Alpha-Beta Pruning](https://cs.stanford.edu/people/eroberts/courses/soco/projects/2003-04/intelligent-search/alphabeta.html)
-* [Best Magics So Far](https://www.chessprogramming.org/Best_Magics_so_far)
-* [Chess Move Generation with Magic Bitboards](https://essays.jwatzman.org/essays/chess-move-generation-with-magic-bitboards.html)
-* [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
-* [LiChess Open Database](https://database.lichess.org/)
-* [Magic Bitboards](https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks#Magic_Bitboards)
-* [Minimax Algorithm](https://www.geeksforgeeks.org/artificial-intelligence/mini-max-algorithm-in-artificial-intelligence/)
-* [Move Generation with Bitboards](https://libres.uncg.edu/ir/asu/f/Columbia_Sophie_Spring%202023_thesis.pdf)
-* [Perft Testing Forum](https://talkchess.com/viewtopic.php?t=80952)
-
-<!-- MARKDOWN LINKS & IMAGES -->
-[C]: https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/C_Programming_Language.svg/926px-C_Programming_Language.svg.png
-[C-url]: https://www.c-language.org/
-
-
