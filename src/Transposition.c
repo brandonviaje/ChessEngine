@@ -44,7 +44,7 @@ void ClearTT()
     }
 }
 
-// probe the tt
+// read tt
 int ReadTT(U64 positionKey, int *move, int *score, int alpha, int beta, int depth)
 {
     // map key to index

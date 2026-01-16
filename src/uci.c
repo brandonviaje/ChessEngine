@@ -62,7 +62,7 @@ void ParseGo(char *line)
     }
     else if (time != -1)
     {
-        // simple logic: divide remaining time by 20 moves plus the increment
+        // divide remaining time by 20 moves plus the increment
         timeToSpend = (time / 20) + (inc / 2);
 
         // cap it so we don't think for too long in the opening
@@ -78,7 +78,7 @@ void ParseGo(char *line)
     if (depth == -1)
         depth = 64;
 
-    printf("Thinking for %d ms...\n", timeToSpend);
+    // printf("Thinking for %d ms...\n", timeToSpend);
     SearchPosition(depth, timeToSpend);
 }
 

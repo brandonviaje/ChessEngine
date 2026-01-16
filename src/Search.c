@@ -48,7 +48,7 @@ int AlphaBeta(int alpha, int beta, int depth, int ply)
     if (info.stopped)
         return 0;
 
-    // check the transposition table (tt) if we've seen this exact position before, use that score
+    // check the transposition table if we've seen this exact position before, use that score
     int score = -INF;
     int ttMovePacked = 0;
     int ttScore = -INF;
