@@ -1,5 +1,5 @@
 .vscode/
-chess_engine
+viaje_engine
 build/
 __pycache__/
 chessData.csv

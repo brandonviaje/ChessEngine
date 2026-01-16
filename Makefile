@@ -29,7 +29,7 @@ SRCS = $(SRC_DIR)/Attack.c \
 OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
 
 # Output executable
-TARGET = chess_engine
+TARGET = viaje_engine
 
 all: $(TARGET)
 
