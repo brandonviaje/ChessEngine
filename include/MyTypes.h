@@ -42,6 +42,7 @@
 #define PopCount(bb) __builtin_popcountll(bb)
 #define lsb(bb) __builtin_ctzll(bb)
 #define pop_lsb(ptr) (*(ptr) &= (*(ptr) - 1))
+#define MIRROR(sq) ((sq) ^ 56)
 
 // Typedef
 typedef unsigned long long U64;

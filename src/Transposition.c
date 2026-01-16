@@ -4,30 +4,34 @@ TranspositionTable TTable;
 
 void InitTT(int mbSize)
 {
-    // Calculate number of entries that fit in the given MB size
+    // raw byte calculation
     int bytes = mbSize * 1024 * 1024;
-    TTable.numEntries = bytes / sizeof(TTEntry);
+    int requestedEntries = bytes / sizeof(TTEntry);
 
-    // free old memory if exists
-    if (TTable.entries != NULL)
+    // align to nearest power of 2. makes indexing cheaper/safer
+    TTable.numEntries = 1;
+    while (TTable.numEntries <= requestedEntries)
     {
-        free(TTable.entries);
+        TTable.numEntries <<= 1;
     }
 
-    // alloc new memory
+    TTable.numEntries >>= 1; // overshot, step back
+
+    if (TTable.entries != NULL)
+        free(TTable.entries);
+
     TTable.entries = (TTEntry *)malloc(TTable.numEntries * sizeof(TTEntry));
 
     if (TTable.entries == NULL)
     {
-        printf("Error: Failed to allocate Transposition Table!\n");
+        printf("Error: Failed to allocate TT!\n");
         exit(1);
     }
 
     ClearTT();
-    printf("Transposition Table initialized with %d entries (~%d MB)\n", TTable.numEntries, mbSize);
+    // printf("TT initialized with %d entries (%zu MB)\n", TTable.numEntries, (TTable.numEntries * sizeof(TTEntry)) / (1024 * 1024));
 }
 
-// clear all entries
 void ClearTT()
 {
     for (int i = 0; i < TTable.numEntries; i++)
@@ -40,47 +44,46 @@ void ClearTT()
     }
 }
 
-// Read from the transposition table
+// probe the tt
 int ReadTT(U64 positionKey, int *move, int *score, int alpha, int beta, int depth)
 {
-    // get the index
-    int index = positionKey % TTable.numEntries;
+    // map key to index
+    int index = positionKey % (U64)TTable.numEntries;
 
-    // check if key matches
+    // collision check
     if (TTable.entries[index].hashKey == positionKey)
     {
-        // extract best move
         *move = TTable.entries[index].move;
 
-        // check if depth is sufficient
+        // ignore shallow results
         if (TTable.entries[index].depth >= depth)
         {
             *score = TTable.entries[index].score;
             int flag = TTable.entries[index].flags;
 
-            // check flags for cutoff
             if (flag == TT_FLAG_EXACT)
             {
-                return 1; // exact score, return immediately
+                return 1; // exact hit
             }
             if (flag == TT_FLAG_ALPHA && *score <= alpha)
             {
-                return 1; // Upper bound is worse than alpha, useless branch
+                return 1; // fail-low (upper bound)
             }
             if (flag == TT_FLAG_BETA && *score >= beta)
             {
-                return 1; // Lower bound is better than beta, cutoff
+                return 1; // fail-high (lower bound)
             }
         }
     }
-    return 0; // No valid entry found
+    return 0; // miss
 }
 
-// Write to transposition table
+// store entry
 void WriteTT(U64 positionKey, int move, int score, int depth, int flag)
 {
-    int index = positionKey % TTable.numEntries;
+    U64 index = positionKey % (U64)TTable.numEntries;
 
+    // always replace scheme
     TTable.entries[index].hashKey = positionKey;
     TTable.entries[index].score = score;
     TTable.entries[index].flags = flag;

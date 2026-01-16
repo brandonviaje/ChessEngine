@@ -1,14 +1,17 @@
 #include "../include/Main.h"
 
-int main()
+void InitAll()
 {
     InitAttacks();
     InitEvalMasks();
     InitZobrist();
     InitTT(64);
+}
 
-    ParseFEN(kiwipete);
-
+int main()
+{
+    InitAll();
+    UciLoop();
     CleanupMagic();
 
     return 0;

@@ -31,6 +31,7 @@ int IsolatedPawns(U64 pawns)
     {
         int sq = lsb(temp);
 
+        // no neighbors
         if ((AdjacentFilesMask[sq % 8] & pawns) == 0)
             count++; // isolated pawn
 
@@ -85,8 +86,6 @@ int PassedPawns(U64 pawns, U64 enemyPawns, int color)
 int IsDefendedByPawn(int sq, int color)
 {
     int enemyColor = color ^ 1;
-    // check the pawn attacks from the ENEMY's perspective on this square.
-    // if friendly pawn is on those attack squares, then square is defended.
     U64 defenders = pawnAttacks[enemyColor][sq] & bitboards[color == WHITE ? P : p];
     return (defenders != 0);
 }
@@ -94,26 +93,24 @@ int IsDefendedByPawn(int sq, int color)
 // check if square is defended
 int IsDefended(int sq, int color)
 {
-    // get friendly pieces
-    U64 friendly = occupied & (color == WHITE ? (bitboards[P] | bitboards[N] | bitboards[B] | bitboards[R] | bitboards[Q] | bitboards[K]) : (bitboards[p] | bitboards[n] | bitboards[b] | bitboards[r] | bitboards[q] | bitboards[k]));
-    return friendly & (1ULL << sq); // check if square is defended
+    return IsSquareAttacked(sq, color);
 }
 
 int IsOutpost(int sq, int color)
 {
-    int enemy = color ^ 1;                              // enemy color
-    U64 enemyPawns = bitboards[enemy == WHITE ? P : p]; // enemy pawns
+    int enemy = color ^ 1;
+    U64 enemyPawns = bitboards[enemy == WHITE ? P : p];
 
-    if (pawnAttacks[enemy][sq] & enemyPawns) // attacked by enemy pawn
+    // cannot be driven off by pawn
+    if (pawnAttacks[enemy][sq] & enemyPawns)
         return 0;
 
-    return IsDefendedByPawn(sq, color); // check if our pawn defends it
+    return IsDefendedByPawn(sq, color);
 }
 
-// check if knight is trapped
+// mobility trap detection
 int IsTrappedKnight(int sq)
 {
-    // return true if knight is in a corner or near one
     return (sq == A1 || sq == H1 || sq == A8 || sq == H8 || sq == A2 || sq == H2 || sq == A7 || sq == H7);
 }
 
@@ -142,7 +139,7 @@ int BadBishops(U64 bishops, U64 pawns)
     return badness;
 }
 
-// count rooks on open files
+// count rooks on open/semi-open files
 int RooksOnOpenFiles(U64 rooks)
 {
     int count = 0;
@@ -155,7 +152,7 @@ int RooksOnOpenFiles(U64 rooks)
     return count;
 }
 
-// count rooks on the 7th rank for a given color
+// count rooks on the 7th rank
 int RooksOn7th(U64 rooks, int color)
 {
     int rank = (color == WHITE) ? 6 : 1;              // 7th rank for each color
@@ -176,14 +173,14 @@ int ConnectedRooks(U64 rooks)
     return (sq1 / 8 == sq2 / 8 || sq1 % 8 == sq2 % 8);
 }
 
-// check if the queen is developed early
+// check if queen is developed early
 int EarlyQueenDeveloped(int color)
 {
     int sq = __builtin_ctzll(bitboards[color == WHITE ? Q : q]);
     return (color == WHITE) ? (sq < A2) : (sq > H7);
 }
 
-// count friendly pawns in front of the king
+// king safety structure
 int KingPawnShield(U64 king, U64 pawns, int color)
 {
     if (!king)
@@ -202,12 +199,6 @@ int KingCentralization(U64 king)
 
     // dist from center (rank 3, file 3). closer is better
     return (4 - abs(3 - r)) + (4 - abs(3 - f));
-}
-
-// mirror square vertically
-int Mirror(int square)
-{
-    return (7 - square / 8) * 8 + (square % 8);
 }
 
 // init masks for files, adjacent files, king shields, and passed pawns
@@ -280,4 +271,18 @@ void InitEvalMasks()
                 PassedPawnMask[BLACK][sq] |= (1ULL << (rr * 8 + (f + 1)));
         }
     }
+}
+
+char GetPromotionChar(int promotedPiece)
+{
+    if (promotedPiece == Q || promotedPiece == q)
+        return 'q';
+    if (promotedPiece == R || promotedPiece == r)
+        return 'r';
+    if (promotedPiece == B || promotedPiece == b)
+        return 'b';
+    if (promotedPiece == N || promotedPiece == n)
+        return 'n';
+
+    return ' ';
 }

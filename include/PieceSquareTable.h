@@ -1,6 +1,8 @@
 #ifndef PIECE_SQUARE_TABLE_H
 #define PIECE_SQUARE_TABLE_H
 
+#include "Evaluate.h"
+
 extern int PawnPST[64];
 extern int KnightPST[64];
 extern int BishopPST[64];

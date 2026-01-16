@@ -12,7 +12,7 @@ int MaterialAndPosition(int phase)
     U64 bb;
     int sq;
 
-    // Define base values based on phase
+    // define base values based on phase
     int KnightVal = 320 - ((phase > 0) ? ((16 - phase / 8) * 2) : 0);
 
     if (KnightVal > 320)
@@ -85,7 +85,7 @@ int MaterialAndPosition(int phase)
     while (bb)
     {
         sq = lsb(bb);
-        score -= (100 + PawnPST[Mirror(sq)]);
+        score -= (100 + PawnPST[MIRROR(sq)]);
         pop_lsb(&bb);
     }
 
@@ -94,7 +94,7 @@ int MaterialAndPosition(int phase)
     while (bb)
     {
         sq = lsb(bb);
-        score -= (KnightVal + KnightPST[Mirror(sq)]);
+        score -= (KnightVal + KnightPST[MIRROR(sq)]);
         pop_lsb(&bb);
     }
 
@@ -103,7 +103,7 @@ int MaterialAndPosition(int phase)
     while (bb)
     {
         sq = lsb(bb);
-        score -= (330 + BishopPST[Mirror(sq)]);
+        score -= (330 + BishopPST[MIRROR(sq)]);
         pop_lsb(&bb);
     }
 
@@ -112,7 +112,7 @@ int MaterialAndPosition(int phase)
     while (bb)
     {
         sq = lsb(bb);
-        score -= (RookVal + RookPST[Mirror(sq)]);
+        score -= (RookVal + RookPST[MIRROR(sq)]);
         pop_lsb(&bb);
     }
 
@@ -121,7 +121,7 @@ int MaterialAndPosition(int phase)
     while (bb)
     {
         sq = lsb(bb);
-        score -= (900 + QueenPST[Mirror(sq)]);
+        score -= (900 + QueenPST[MIRROR(sq)]);
         pop_lsb(&bb);
     }
 
@@ -130,46 +130,9 @@ int MaterialAndPosition(int phase)
     if (bb)
     {
         sq = lsb(bb);
-        score -= (20000 + KingPST[Mirror(sq)]);
+        score -= (20000 + KingPST[MIRROR(sq)]);
     }
 
-    return score;
-}
-
-//  POSITIONAL EVAL
-int PositionalEval(int phase)
-{
-    int score = 0;
-    for (int sq = 0; sq < 64; sq++)
-    {
-        // white pieces get positive score from their squares
-        if (GetBit(bitboards[P], sq))
-            score += PawnPST[sq];
-        if (GetBit(bitboards[N], sq))
-            score += KnightPST[sq];
-        if (GetBit(bitboards[B], sq))
-            score += BishopPST[sq];
-        if (GetBit(bitboards[R], sq))
-            score += RookPST[sq];
-        if (GetBit(bitboards[Q], sq))
-            score += QueenPST[sq];
-        if (GetBit(bitboards[K], sq))
-            score += KingPST[sq];
-
-        // black pieces changes white score
-        if (GetBit(bitboards[p], sq))
-            score -= PawnPST[Mirror(sq)];
-        if (GetBit(bitboards[n], sq))
-            score -= KnightPST[Mirror(sq)];
-        if (GetBit(bitboards[b], sq))
-            score -= BishopPST[Mirror(sq)];
-        if (GetBit(bitboards[r], sq))
-            score -= RookPST[Mirror(sq)];
-        if (GetBit(bitboards[q], sq))
-            score -= QueenPST[Mirror(sq)];
-        if (GetBit(bitboards[k], sq))
-            score -= KingPST[Mirror(sq)];
-    }
     return score;
 }
 
@@ -178,9 +141,9 @@ int PositionalEval(int phase)
 int PawnEval(int phase)
 {
     int score = 0;
-    int lateGameWeight = (128 - phase); // Higher number = later game
+    int lateGameWeight = (24 - phase); // Higher number = later game
 
-    // Isolated & Doubled
+    // isolated & doubled
     score -= IsolatedPawns(bitboards[P]) * 12;
     score += IsolatedPawns(bitboards[p]) * 12;
 
@@ -192,16 +155,16 @@ int PawnEval(int phase)
     score += BackwardPawns(bitboards[p], bitboards[P], BLACK) * 4;
 
     // Passed Pawns
-    score += PassedPawns(bitboards[P], bitboards[p], WHITE) * 15 * lateGameWeight / 128;
-    score -= PassedPawns(bitboards[p], bitboards[P], BLACK) * 15 * lateGameWeight / 128;
+    score += PassedPawns(bitboards[P], bitboards[p], WHITE) * (10 + lateGameWeight * 2);
+    score -= PassedPawns(bitboards[p], bitboards[P], BLACK) * (10 + lateGameWeight * 2);
 
-    // Check White D2 pawn blocked by D3 piece
+    // check white D2 pawn blocked by D3 piece
     if ((bitboards[P] & (1ULL << D2)) && (occupied & (1ULL << D3)))
         score -= 8;
     if ((bitboards[P] & (1ULL << E2)) && (occupied & (1ULL << E3)))
         score -= 8;
 
-    // Check Black D7 pawn blocked by D6 piece
+    // check black D7 pawn blocked by D6 piece
     if ((bitboards[p] & (1ULL << D7)) && (occupied & (1ULL << D6)))
         score += 8;
     if ((bitboards[p] & (1ULL << E7)) && (occupied & (1ULL << E6)))
@@ -264,7 +227,6 @@ int KnightEval()
     }
 
     // trap: White Knight on C3 blocked
-    // check specific squares
     if ((bitboards[N] & (1ULL << C3)) && (bitboards[P] & (1ULL << C2)) && (bitboards[P] & (1ULL << D4)) && !(bitboards[P] & (1ULL << E4)))
     {
         score -= 10;
@@ -280,9 +242,9 @@ int BishopEval(int phase)
     int score = 0;
 
     if (PopCount(bitboards[B]) >= 2)
-        score += (phase > 64 ? 25 : 50);
+        score += (phase > 12 ? 25 : 50);
     if (PopCount(bitboards[b]) >= 2)
-        score -= (phase > 64 ? 25 : 50);
+        score -= (phase > 12 ? 25 : 50);
 
     score -= BadBishops(bitboards[B], bitboards[P]) * 4;
     score += BadBishops(bitboards[b], bitboards[p]) * 4;
@@ -330,13 +292,15 @@ int KingEval(int phase)
 {
     int score = 0;
 
-    if (phase > 64)
+    if (phase > 10)
     {
+        // opening/midgame: hide the king
         score += KingPawnShield(bitboards[K], bitboards[P], WHITE) * 10;
         score -= KingPawnShield(bitboards[k], bitboards[p], BLACK) * 10;
     }
     else
     {
+        // endgame: active king
         score += KingCentralization(bitboards[K]) * 5;
         score -= KingCentralization(bitboards[k]) * 5;
     }
@@ -348,13 +312,15 @@ int KingEval(int phase)
 
 int GamePhase()
 {
-    int phase = 128;
-    phase -= PopCount(bitboards[N]);
-    phase -= PopCount(bitboards[B]);
-    phase -= PopCount(bitboards[R]) * 2;
-    phase -= PopCount(bitboards[Q]) * 4;
-    if (phase < 0)
-        phase = 0;
+    int phase = 0;
+    phase += PopCount(bitboards[N]) * 1;
+    phase += PopCount(bitboards[n]) * 1;
+    phase += PopCount(bitboards[B]) * 1;
+    phase += PopCount(bitboards[b]) * 1;
+    phase += PopCount(bitboards[R]) * 2;
+    phase += PopCount(bitboards[r]) * 2;
+    phase += PopCount(bitboards[Q]) * 4;
+    phase += PopCount(bitboards[q]) * 4;
     return phase;
 }
 
@@ -366,7 +332,6 @@ int Evaluate()
     int score = 0;
 
     score += MaterialAndPosition(phase);
-    score += PositionalEval(phase);
     score += PawnEval(phase);
     score += KnightEval();
     score += BishopEval(phase);
@@ -377,11 +342,6 @@ int Evaluate()
     score -= score * halfmove / 200;
 
     return (side == WHITE) ? score : -score;
-}
-
-void PrintEvaluation()
-{
-    printf("Evaluation: %d centipawns\n", Evaluate());
 }
 
 void TraceEvaluation()
@@ -419,7 +379,7 @@ void TraceEvaluation()
     printf("King Safety:     %d\n", kings);
     score += kings;
 
-    // Tempo / Drawishness
+    // tempo / drawishness
     int finalScore = (side == WHITE) ? score : -score;
     printf("--\n");
     printf("Total Raw:       %d\n", score);

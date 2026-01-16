@@ -94,7 +94,6 @@ int ConnectedRooks(U64 rooks);
 int EarlyQueenDeveloped(int color);
 int KingPawnShield(U64 king, U64 pawns, int color);
 int KingCentralization(U64 king);
-int Mirror(int square);
 void InitEvalMasks();
 
 #endif
