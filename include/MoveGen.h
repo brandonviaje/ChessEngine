@@ -2,16 +2,9 @@
 #define MOVEGEN_H
 
 #include "Attack.h"
-#include "Board.h"
 #include "Magic.h"
 #include "Masks.h"
 #include "MyTypes.h"
-
-typedef struct MoveList
-{
-    Move moves[MAX_MOVES];
-    int count;
-} MoveList;
 
 // Function prototypes
 void GeneratePawnMoves(U64 pawns, U64 ownPieces, U64 enemyPieces, int side, int piece, MoveList *list);

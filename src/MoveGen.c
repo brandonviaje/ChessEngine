@@ -294,11 +294,11 @@ int IsSquareAttacked(int sq, int bySide)
 {
     if (bySide == WHITE)
     {
-        
-        U64 attackers = 0;  // Squares from which a white pawn could attack current square
-        if ((sq & 0xF) != 0) // not on file a
+
+        U64 attackers = 0;                 // Squares from which a white pawn could attack current square
+        if ((sq & 0xF) != 0)               // not on file a
             attackers |= 1ULL << (sq - 9); // white pawn attacks from left diagonal
-        if ((sq & 0xF) != 7) // not on file h
+        if ((sq & 0xF) != 7)               // not on file h
             attackers |= 1ULL << (sq - 7); // white pawn attacks from right diagonal
 
         if (attackers & bitboards[P])
@@ -306,11 +306,11 @@ int IsSquareAttacked(int sq, int bySide)
     }
     else
     {
-        
-        U64 attackers = 0;      // squares from where a black pawn could attack current square
-        if ((sq & 0xF) != 0)                 // not on file a
+
+        U64 attackers = 0;                 // squares from where a black pawn could attack current square
+        if ((sq & 0xF) != 0)               // not on file a
             attackers |= 1ULL << (sq + 7); // black pawn attacks from left diagonal
-        if ((sq & 0xF) != 7)                // not on file h
+        if ((sq & 0xF) != 7)               // not on file h
             attackers |= 1ULL << (sq + 9); // black pawn attacks from right diagonal
 
         if (attackers & bitboards[p])
@@ -389,7 +389,7 @@ void GenerateLegalMoves(MoveList *legal)
     for (int i = 0; i < pseudo.count; i++)
     {
         // make ith pseudo-legal move
-        MakeMove(&pseudo, i);
+        MakeMove(&pseudo.moves[i]);
 
         // check the side that just moved
         int movedSide = side ^ 1;
@@ -401,7 +401,7 @@ void GenerateLegalMoves(MoveList *legal)
         }
 
         // undo same move
-        UndoMove(&pseudo, i);
+        UndoMove(&pseudo.moves[i]);
     }
 }
 

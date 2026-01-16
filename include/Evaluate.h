@@ -18,7 +18,6 @@ int RooksOnOpenFiles(U64 rooks);
 int RooksOn7th(U64 rooks, int color);
 int GamePhase();
 int Evaluate();
-void PrintEvaluation();
 void TraceEvaluation();
 
 #endif

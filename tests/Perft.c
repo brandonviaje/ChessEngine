@@ -13,9 +13,9 @@ U64 Perft(int depth)
 
     for (int i = 0; i < list.count; i++)
     {
-        MakeMove(&list, i);
+        MakeMove(&list.moves[i]);
         nodes += Perft(depth - 1);
-        UndoMove(&list, i);
+        UndoMove(&list.moves[i]);
     }
 
     return nodes;
@@ -30,7 +30,7 @@ void PerftDivide(int depth)
 
     for (int i = 0; i < list.count; i++)
     {
-        MakeMove(&list, i);
+        MakeMove(&list.moves[i]);
 
         U64 nodes = Perft(depth - 1);
 
@@ -42,7 +42,7 @@ void PerftDivide(int depth)
         printf("%c%c%c%c: %llu\n", fromFile, fromRank, toFile, toRank, nodes);
         total += nodes;
 
-        UndoMove(&list, i);
+        UndoMove(&list.moves[i]);
     }
 
     printf("Total nodes: %llu\n", total);

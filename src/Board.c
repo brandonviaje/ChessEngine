@@ -9,17 +9,38 @@ U64 occupied;
 // Game states
 int side; // 0 = white, 1 = black
 int enpassant;
-int castlePerm; 
-unsigned char castle; 
+int castlePerm;
+unsigned char castle;
 int halfmove;
 int fullmove;
+
+void UpdateBitboards()
+{
+    whitePieces = 0ULL;
+    blackPieces = 0ULL;
+    occupied = 0ULL;
+
+    // Combine all white pieces
+    for (int i = P; i <= K; i++)
+    {
+        whitePieces |= bitboards[i];
+    }
+
+    // Combine all black pieces
+    for (int i = p; i <= k; i++)
+    {
+        blackPieces |= bitboards[i];
+    }
+
+    occupied = whitePieces | blackPieces;
+}
 
 void ResetBoardState()
 {
     // Reset game state variables
     side = -1;
     enpassant = -1;
-    castle = 0; 
+    castle = 0;
     halfmove = 0;
     fullmove = 0;
     positionKey = 0;
@@ -40,19 +61,32 @@ int CharToPiece(char c)
 {
     switch (c)
     {
-    case 'P': return P;
-    case 'N': return N;
-    case 'B': return B;
-    case 'R': return R;
-    case 'Q': return Q;
-    case 'K': return K;
-    case 'p': return p;
-    case 'n': return n;
-    case 'b': return b;
-    case 'r': return r;
-    case 'q': return q;
-    case 'k': return k;
-    default: return -1; 
+    case 'P':
+        return P;
+    case 'N':
+        return N;
+    case 'B':
+        return B;
+    case 'R':
+        return R;
+    case 'Q':
+        return Q;
+    case 'K':
+        return K;
+    case 'p':
+        return p;
+    case 'n':
+        return n;
+    case 'b':
+        return b;
+    case 'r':
+        return r;
+    case 'q':
+        return q;
+    case 'k':
+        return k;
+    default:
+        return -1;
     }
 }
 
@@ -66,7 +100,7 @@ void SetPiece(int piece, int square)
     else
         SetBit(blackPieces, square);
 
-    SetBit(occupied, square); 
+    SetBit(occupied, square);
 }
 
 void PrintBitBoard(U64 board)
@@ -156,10 +190,18 @@ void ParseFEN(char *FEN)
         // determine current castling rights
         switch (fields[2][j])
         {
-        case 'K': castle |= WHITE_CASTLE_K; break;
-        case 'Q': castle |= WHITE_CASTLE_Q; break;
-        case 'k': castle |= BLACK_CASTLE_K; break;
-        case 'q': castle |= BLACK_CASTLE_Q; break;
+        case 'K':
+            castle |= WHITE_CASTLE_K;
+            break;
+        case 'Q':
+            castle |= WHITE_CASTLE_Q;
+            break;
+        case 'k':
+            castle |= BLACK_CASTLE_K;
+            break;
+        case 'q':
+            castle |= BLACK_CASTLE_Q;
+            break;
         }
     }
 
@@ -176,37 +218,33 @@ void ParseFEN(char *FEN)
     halfmove = atoi(fields[4]); // Halfmove clock
     fullmove = atoi(fields[5]); // Fullmove number
     free(fen_copy);             // dealloc memory
+    UpdateBitboards();
     positionKey = GeneratePosKey(); // compute the initial key from scratch
 }
 
-// Make Move Function
-void MakeMove(MoveList *list, int index)
+// make move
+void MakeMove(Move *move)
 {
-    // Catch move index out of bounds
-    if (index < 0 || index >= MAX_MOVES)
-    {
-        fprintf(stderr, "%s", "Error: Invalid Move Index\n");
-        exit(EXIT_FAILURE);
-    }
-
-    int piece = list->moves[index].piece;
-    int from = list->moves[index].from;
-    int to = list->moves[index].to;
-    int captured = list->moves[index].captured;
-    int promotedPiece = list->moves[index].promotion;
-    int moveFlag = list->moves[index].flags;
+    int piece = move->piece;
+    int from = move->from;
+    int to = move->to;
+    int captured = move->captured;
+    int promotedPiece = move->promotion;
+    int moveFlag = move->flags;
 
     // Save state for undo
-    list->moves[index].prevCastle = castle;
-    list->moves[index].prevEnpassant = enpassant;
-    list->moves[index].prevHalfMove = halfmove;
+    move->prevCastle = castle;
+    move->prevEnpassant = enpassant;
+    move->prevHalfMove = halfmove;
 
-    HashSide();              // flip side in hash
-    HashCastle();            // remove old castling rights
-    HashPiece(piece, from);  // remove moving piece from source
+    HashSide();             // flip side in hash
+    HashCastle();           // remove old castling rights
+    HashPiece(piece, from); // remove moving piece from source
 
-    if (enpassant != -1) HashEnPassant(); 
-    if (captured != -1 && moveFlag != FLAG_ENPASSANT) HashPiece(captured, to); 
+    if (enpassant != -1)
+        HashEnPassant();
+    if (captured != -1 && moveFlag != FLAG_ENPASSANT)
+        HashPiece(captured, to);
 
     // Create bit mask of from and to square
     U64 fromMask = 1ULL << from;
@@ -222,37 +260,40 @@ void MakeMove(MoveList *list, int index)
         U64 fromRook, toRook;               // mask for a specific rooks position, mask to place the rook at that position
 
         // kingside castle white
-        if (side == WHITE) {
+        if (side == WHITE)
+        {
             fromRook = 1ULL << 7;           // h1 rook
             toRook = 1ULL << (to - 1);      // f1
             MovePiece(R, fromRook, toRook); // move rook from -> to
-            HashPiece(R, 7); HashPiece(R, 5); // hash Rook Move
-        }        
+            HashPiece(R, 7);                // hash rook move
+            HashPiece(R, 5);                // hash Rook move
+        }
         else
         {                                   // kingside castle black
             fromRook = 1ULL << 63;          // h8 rook
             toRook = 1ULL << (to - 1);      // f8
             MovePiece(r, fromRook, toRook); // move rook from -> to
-            HashPiece(r, 63); HashPiece(r, 61); // hash Rook Move
+            HashPiece(r, 63);               // hash Rook Move
+            HashPiece(r, 61);               // hash Rook Move
         }
         break;
     }
     case FLAG_CASTLE_QUEENSIDE:
     {
         MovePiece(piece, fromMask, toMask);
-        HashPiece(piece, to);   // hash: Add King
+        HashPiece(piece, to); // hash: Add King
         U64 fromRook, toRook; // mask for a from position and to position for rooks
 
         // Update corresponding bitboards
-        if (side == WHITE) 
+        if (side == WHITE)
         {
             fromRook = 1ULL << 0;           // a1 rook
             toRook = 1ULL << (to + 1);      // d1
             MovePiece(R, fromRook, toRook); // move rook from -> to
             HashPiece(R, 0);                // hash Rook Move
             HashPiece(R, 3);                // hash Rook Move
-        } 
-        else 
+        }
+        else
         {
             fromRook = 1ULL << 56;          // a8 rook
             toRook = 1ULL << (to + 1);      // d8
@@ -263,7 +304,7 @@ void MakeMove(MoveList *list, int index)
         break;
     }
     case FLAG_DOUBLE_PUSH:
-{
+    {
         MovePiece(piece, fromMask, toMask);
         HashPiece(piece, to);                        // hash: Add Pawn
         enpassant = side == WHITE ? to - 8 : to + 8; // set enpassant square
@@ -273,7 +314,7 @@ void MakeMove(MoveList *list, int index)
     case FLAG_ENPASSANT:
     {
         MovePiece(piece, fromMask, toMask);
-        HashPiece(piece, to);                           // add Pawn to dest
+        HashPiece(piece, to); // add Pawn to dest
 
         // remove captured piece from its bitboard: behind the pawn that just moved
         int capturedSquare = side == WHITE ? to - 8 : to + 8;
@@ -320,10 +361,10 @@ void MakeMove(MoveList *list, int index)
             blackPieces &= ~fromMask;
 
         RestorePiece(promotedPiece, toMask); // place promoted piece
-        HashPiece(promotedPiece, to);        // add promoted piece 
+        HashPiece(promotedPiece, to);        // add promoted piece
         break;
     }
-    default: 
+    default:
     {
         // check if move made is a capture
         if (captured != -1)
@@ -363,46 +404,34 @@ void MakeMove(MoveList *list, int index)
 }
 
 // Undo Move Function
-void UndoMove(MoveList *list, int index)
+void UndoMove(Move *move)
 {
-    // Catch move index out of bounds
-    if (index < 0 || index >= MAX_MOVES)
-    {
-        fprintf(stderr, "%s", "Error: Invalid Move Index\n");
-        exit(EXIT_FAILURE);
-    }
-
-    int piece = list->moves[index].piece;
-    int from = list->moves[index].from;
-    int to = list->moves[index].to;
-    int captured = list->moves[index].captured;
-    int promotedPiece = list->moves[index].promotion;
-    int moveFlag = list->moves[index].flags;
+    int piece = move->piece;
+    int from = move->from;
+    int to = move->to;
+    int captured = move->captured;
+    int promotedPiece = move->promotion;
+    int moveFlag = move->flags;
 
     // get prev side
     int prevSide = side ^ 1;
 
     //  hash reversal
-    HashSide(); 
-    HashCastle(); 
-    if(enpassant != -1) HashEnPassant();
-
-    // Catch square index out of bounds
-    if (from < 0 || from >= 64 || to < 0 || to >= 64)
-    {
-        fprintf(stderr, "Error: Invalid square index (%d -> %d)\n", from, to);
-        exit(EXIT_FAILURE);
-    }
+    HashSide();
+    HashCastle();
+    if (enpassant != -1)
+        HashEnPassant();
 
     // bitmasks of from and to squares
     U64 fromMask = 1ULL << from;
     U64 toMask = 1ULL << to;
-    enpassant = list->moves[index].prevEnpassant;
-    castle = list->moves[index].prevCastle;
+    enpassant = move->prevEnpassant;
+    castle = move->prevCastle;
 
     //  restore old right ands enpassant
     HashCastle();
-    if(enpassant != -1) HashEnPassant();
+    if (enpassant != -1)
+        HashEnPassant();
 
     switch (moveFlag)
     {
@@ -418,55 +447,56 @@ void UndoMove(MoveList *list, int index)
             fromRook = 1ULL << 7;      // h1 rook
             toRook = 1ULL << (to - 1); // f1
             MovePiece(R, toRook, fromRook);
-            HashPiece(R, 5);           // reverse Rook
-            HashPiece(R, 7); 
-        } 
+            HashPiece(R, 5); // reverse Rook
+            HashPiece(R, 7);
+        }
         else
         {                              // undoing Black's move
             fromRook = 1ULL << 63;     // h8 rook
             toRook = 1ULL << (to - 1); // f8
             MovePiece(r, toRook, fromRook);
-            HashPiece(r, 61);          // reverse Rook
-            HashPiece(r, 63); 
+            HashPiece(r, 61); // reverse Rook
+            HashPiece(r, 63);
         }
         break;
     }
-
     case FLAG_CASTLE_QUEENSIDE:
     {
         MovePiece(piece, toMask, fromMask); // Move king back
-        HashPiece(piece, to); 
+        HashPiece(piece, to);
         HashPiece(piece, from);
         U64 fromRook, toRook;
-        
+
         if (prevSide == WHITE)
         {                              // undoing White's move
             fromRook = 1ULL << 0;      // a1 rook
             toRook = 1ULL << (to + 1); // d1
             MovePiece(R, toRook, fromRook);
-            HashPiece(R, 3); HashPiece(R, 0);
-        } 
-        else 
+            HashPiece(R, 3);
+            HashPiece(R, 0);
+        }
+        else
         {                              // undoing Black's move
             fromRook = 1ULL << 56;     // a8 rook
             toRook = 1ULL << (to + 1); // d8
             MovePiece(r, toRook, fromRook);
-            HashPiece(r, 59); HashPiece(r, 56);
+            HashPiece(r, 59);
+            HashPiece(r, 56);
         }
         break;
     }
-
     case FLAG_DOUBLE_PUSH:
     {
         MovePiece(piece, toMask, fromMask); // move piece back
-        HashPiece(piece, to); HashPiece(piece, from);
+        HashPiece(piece, to);
+        HashPiece(piece, from);
         break;
     }
-
     case FLAG_ENPASSANT:
     {
-        MovePiece(piece, toMask, fromMask); 
-        HashPiece(piece, to); HashPiece(piece, from); // Move pawn back
+        MovePiece(piece, toMask, fromMask);
+        HashPiece(piece, to);
+        HashPiece(piece, from);                                   // Move pawn back
         int capturedSquare = prevSide == WHITE ? to - 8 : to + 8; // get captured square
         U64 capturedMask = 1ULL << capturedSquare;
         int capPawn = (prevSide == WHITE) ? p : P;
@@ -474,7 +504,6 @@ void UndoMove(MoveList *list, int index)
         HashPiece(capPawn, capturedSquare); // restore captured pawn
         break;
     }
-
     case FLAG_PROMOTION:
     {
         bitboards[promotedPiece] &= ~toMask; // remove promoted piece
@@ -485,25 +514,26 @@ void UndoMove(MoveList *list, int index)
         else
             blackPieces &= ~toMask;
 
-        HashPiece(promotedPiece, to);   // remove promoted
-        RestorePiece(piece, fromMask);  // restore pawn
-        HashPiece(piece, from);         // add pawn
+        HashPiece(promotedPiece, to);  // remove promoted
+        RestorePiece(piece, fromMask); // restore pawn
+        HashPiece(piece, from);        // add pawn
 
-        if (captured != -1) {
+        if (captured != -1)
+        {
             RestorePiece(captured, toMask);
-            HashPiece(captured, to);    // add captured
+            HashPiece(captured, to); // add captured
         }
         break;
     }
-
     default:
     {
-        MovePiece(piece, toMask, fromMask); 
-        HashPiece(piece, to); 
-        HashPiece(piece, from);         // move piece back
-        if (captured != -1) {
+        MovePiece(piece, toMask, fromMask);
+        HashPiece(piece, to);
+        HashPiece(piece, from); // move piece back
+        if (captured != -1)
+        {
             RestorePiece(captured, toMask);
-            HashPiece(captured, to);    // restore captured
+            HashPiece(captured, to); // restore captured
         }
         break;
     }
@@ -511,7 +541,7 @@ void UndoMove(MoveList *list, int index)
     side ^= 1; // flip side
 
     // restore half and full moves
-    halfmove = list->moves[index].prevHalfMove;
+    halfmove = move->prevHalfMove;
     if (side == BLACK) // we just undid Black's move
         fullmove--;
 }
