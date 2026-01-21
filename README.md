@@ -35,7 +35,7 @@ The engine is live on **Lichess** as an automated bot:
 
 ---
 
-## 🛠️ Built With
+## Built With
 
 <p align="left">
   <a href="https://www.c-language.org/">
@@ -49,7 +49,7 @@ The engine is live on **Lichess** as an automated bot:
 
 ---
 
-## ⚙️ Getting Started
+## Getting Started
 
 Follow the steps below to build and run the engine locally.
 
@@ -78,3 +78,4 @@ make
 **VS my bot [here](https://lichess.org/@/ViajeBot):** 
 
 *Once you click the link, press “Challenge” to start! ⚡*
+
