@@ -77,5 +77,6 @@ make
 
 **VS my bot [here](https://lichess.org/@/ViajeBot):** 
 
-*Once you click the link, press “Challenge” to start! ⚡*
+*Once you click the link, press “Challenge” to start! *
+
 
