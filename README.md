@@ -36,13 +36,6 @@ The engine is live on **Lichess** as an automated bot:
 ---
 
 ## Built With
-
-<p align="left">
-  <a href="https://www.c-language.org/">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/C_Programming_Language.svg/926px-C_Programming_Language.svg.png" width="90"/>
-  </a>
-</p>
-
 - **C** — low-level performance and memory control
 - **Make** — build automation
 - **Lichess API** — bot deployment and game management
